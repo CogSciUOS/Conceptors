@@ -7,7 +7,7 @@ Created on Tue Oct 20 16:36:10 2015
 
 from matplotlib.pyplot import *
 import copy
-from numba import jit
+
 
 class Hierarchical:
     
@@ -163,6 +163,3 @@ class Hierarchical:
             #plot(xspace,inpPLcolls[p])   
             plot(xspace,self.cl_inp_colls[p]) 
             plot(xspace,self.outp_colls[p])         
-                
-        
-        
