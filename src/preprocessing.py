@@ -14,10 +14,8 @@ import math
 import sklearn.decomposition as sd
 import os
 import scipy.io.wavfile as wav
-#import sys
-#sys.path.append('C:/Program Files/Python/python_speech_features-master')
-#sys.path.append('/Users/apple1/Dropbox/Conceptors/Task1_Recognition/python_speech_features-master')
-from features import mfcc
+
+from base import mfcc
 
 #%%
 
