@@ -7,10 +7,6 @@ to get all the files.
 ### birddb
 This database can be found on the website of the [Taylor Lab](http://taylor0.biology.ucla.edu/birdDBQuery/) and used for querying different bird species for data files of their songs.
 
-### robindb
-This is data containing only one species (recorded in the Rocky Mountains) with annotated
-syllables.
-
 ## Textgrid programs
 There are quite some programs around for analyzing textgrid data. The one recommended in the robindb
 sources is praat which looks roughly like this:
