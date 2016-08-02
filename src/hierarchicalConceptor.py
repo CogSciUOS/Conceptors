@@ -147,13 +147,15 @@ class Hierarchical:
                 plot(xspace ,self.gammaColl[l,p,:].T, label="Pattern "+str(p))
             legend()
             suptitle('Gamma lvl' + str(l))
+        show()
+
         
     def plot_recall(self):
         
         figure() 
-        for p in range(self.n_patts):   
-            subp = subplot(self.n_patts,1,p+1)
+        for p in range(self.n_patts):
             xspace = np.linspace(0,self.plotRange,self.plotRange)
-            #plot(xspace,inpPLcolls[p])   
             plot(xspace,self.cl_inp_colls[p]) 
-            plot(xspace,self.outp_colls[p])         
+            plot(xspace,self.outp_colls[p])
+
+        show()

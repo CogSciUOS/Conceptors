@@ -47,9 +47,9 @@ for s in range(len(SC.Songs)):
     ylim([0,SC.nSylls - 1])
     ylabel(' Syllable #')
     xlabel('t')
-
+show()
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (30,50), nLayers = 2, useSyllRecog = True, SyllPath = '../data/',
+SC.run(pattRepRange = (30,50), nLayers = 2, useSyllRecog = False, SyllPath = None,
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 SC.H.plot_gamma()
