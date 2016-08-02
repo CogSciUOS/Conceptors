@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 20 16:36:10 2015
-
-@author: aspeiser
-"""
-
 from matplotlib.pyplot import *
 import copy
 

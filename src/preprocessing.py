@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
 """
-Created on Tue Jan 26 11:15:55 2016
-
-@author: asus
+Basis class for running the birdsong recognition.
 """
 
 import numpy as np
@@ -14,10 +11,6 @@ import math
 import sklearn.decomposition as sd
 import os
 import scipy.io.wavfile as wav
-
-from base import mfcc
-
-#%%
 
 def load_data(syllable, N, used_samples, sample_order = None):
     """Function that goes through all N samples of syllable and loads its wave data.

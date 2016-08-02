@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This class is used to run the SongClassifier with randomly generated
 syllable sequences.

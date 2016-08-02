@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
 """
 The class for the SongClassifier.
 """
 
 import os.path
 
-import numpy as np
 from rf_reservoir_c import *
 from hierarchical_c import *
 from syllableClassifier import *
 import itertools
-
-#%%
 
 class SongClassifier:
     
