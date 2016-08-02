@@ -27,9 +27,9 @@ HFCParams = {'sigma': 0.99,
 
 
 # create random songs and load them into a RFC
-s1_length = 3
-s2_length = 5
-s3_length = 4
+s1_length = 8
+s2_length = 10
+s3_length = 2
 SC.addSong(s1_length)
 SC.addSong(s2_length)
 SC.addSong(s3_length)
