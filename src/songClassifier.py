@@ -4,8 +4,8 @@ The class for the SongClassifier.
 
 import os.path
 
-from rf_reservoir_c import *
-from hierarchical_c import *
+from rfReservoirConceptor import *
+from hierarchicalConceptor import *
 from syllableClassifier import *
 import itertools
 

@@ -13,10 +13,11 @@ class Hierarchical:
         self.P = np.zeros_like(P_raw)
         
         for p in range(self.RFC.n_patts):
-            
             P_raw[:,p] = np.mean(self.RFC.Z_list[p][:]**2,1) # mean over correct dimension? TR p. 164
             
-        P_norm = np.sqrt(np.sum(P_raw**2,0)); P_norm_mean = np.mean(P_norm)
+        P_norm = np.sqrt(np.sum(P_raw**2,0))
+        P_norm_mean = np.mean(P_norm)
+
         self.P = np.dot(P_raw,np.diag(1./P_norm))*P_norm_mean
     
     #@jit

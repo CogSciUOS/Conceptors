@@ -5,7 +5,7 @@ Class for the syllable classification
 import os.path
 import numpy as np
 
-import reservoir_c as c
+import reservoirConceptor as c
 import functions as fct
 import preprocessing as prep
 
