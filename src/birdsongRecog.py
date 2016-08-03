@@ -5,6 +5,8 @@ syllable sequences.
 
 from songClassifier import *
 
+import warnings
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 # create list of syllables and initialize SongClassifier with it
 syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej']
