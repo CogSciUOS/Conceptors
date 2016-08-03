@@ -1,13 +1,20 @@
+# -*- coding: utf-8 -*-
 """
-The class for the SongClassifier.
+Created on Wed Jun 15 17:28:51 2016
+
+@author: asus
 """
 
 import os.path
-
-from rfReservoirConceptor import *
-from hierarchicalConceptor import *
+import sys
+sys.path.append('C:/Users/asus/Dropbox/Conceptors/Task1_Recognition/runSyllClassScripts')
+import numpy as np
+from rf_reservoir_c import *
+from hierarchical_c import *
 from syllableClassifier import *
 import itertools
+
+#%%
 
 class SongClassifier:
     
@@ -76,8 +83,7 @@ class SongClassifier:
         
         # load patterns into RFC
         self.R = RF_Reservoir(**RFCParams)
-        self.R.load(self.patterns, t_learn = t_learn, t_cadapt = t_cadapt, t_wash = t_wash, **loadingParams)# TyA_wout = TyA_wout, TyA_wload = TyA_wload,
-                    #gradient_c = gradient_c, gradient_window = gradient_window, c_adapt_rate = c_adapt_rate, gradient_cut = gradient_cut)
+        self.R.load(self.patterns, t_learn = t_learn, t_cadapt = t_cadapt, t_wash = t_wash, **loadingParams)
         self.R.recall(t_recall = t_recall)
     
     def run(self, patterns = None, nLayers = 3, pattRepRange = (2,20), useSyllRecog = False, SyllPath = None,
@@ -104,7 +110,7 @@ class SongClassifier:
         if patterns is not None: self.patterns = patterns
             
         # generate repetition times for each song from a uniform distribution of range pattRepRange
-        pattTimesteps = [np.random.randint(low = pattRepRange[0], high = pattRepRange[1]) for i in range(len(self.patterns))]
+        pattTimesteps = [np.random.randint(low = pattRepRange[0], high = pattRepRange[1]) * len(self.Songs[i]) for i in range(len(self.patterns))]
         
         # putt all patterns into syllable recognizer, if syllable recognition is to be done
         if useSyllRecog:
@@ -132,12 +138,20 @@ class SongClassifier:
             t_all = 0
             self.patterns = []
             for i,t in enumerate(pattTimesteps):
-                self.patterns.append(evidences[t_all:t_all + t*len(self.Songs[i]),:])
+                
+                patt = np.zeros((1,self.nSylls))
+                for j in range(t):
+                    pause_length = np.random.randint(1, high = 3)
+                    patt_tmp = np.concatenate((evidences[t_all + j*len(self.Songs[i]) : t_all + (j+1)*len(self.Songs[i]),:], np.zeros((pause_length,self.nSylls))), axis = 0)
+                    patt = np.vstack((patt, patt_tmp))
+                pause_length = np.random.randint(1, high = 7)
+                patt = np.vstack((patt, np.zeros((pause_length, self.nSylls))))
+                #self.patterns.append(evidences[t_all:t_all + t*len(self.Songs[i]),:])
+                self.patterns.append(patt)
                 t_all += t*len(self.Songs[i])
             
         # initialize and run HFC with patterns
         self.H = Hierarchical(self.R, nLayers)
         self.H.run(self.patterns, pattTimesteps = pattTimesteps, plotRange = pattTimesteps, **HFCParams)
-                   #sigma = sigma, drift = drift,
-                   #gammaRate = gammaRate, dcsv = dcsv, SigToNoise = SigToNoise)
+
     
