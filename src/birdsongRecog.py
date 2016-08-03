@@ -5,6 +5,8 @@ syllable sequences.
 
 from songClassifier import *
 
+# %matplotlib inline
+
 
 # create list of syllables and initialize SongClassifier with it
 syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej']
@@ -50,6 +52,6 @@ for s in range(len(SC.Songs)):
 show()
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (30,50), nLayers = 2, useSyllRecog = False, SyllPath = None,
+SC.run(pattRepRange = (30,50), nLayers = 2, useSyllRecog = True, SyllPath = '/Users/pfaion/Git/Conceptors/data/birddb/syll',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 SC.H.plot_gamma()
