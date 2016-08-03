@@ -15,5 +15,5 @@ def delEmpty(path):
                 print(f)
                 os.remove(f)
 
-path = os.path.abspath('/Users/pfaion/Git/Conceptors/data/birddb/syll')
+path = os.path.abspath('../data/birddb/syll')
 delEmpty(path)
