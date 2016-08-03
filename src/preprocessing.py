@@ -11,6 +11,7 @@ import math
 import sklearn.decomposition as sd
 import os
 import scipy.io.wavfile as wav
+from python_speech_features import mfcc
 
 def load_data(syllable, N, used_samples, sample_order = None):
     """Function that goes through all N samples of syllable and loads its wave data.
@@ -49,7 +50,7 @@ def zeroPad(data):
     :returns syllables: list with same number of entries as data, but with zero
                         padded arrays
     """
-    
+
     max_length = 0
     syllables = []
     
