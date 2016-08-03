@@ -8,7 +8,7 @@ def delEmpty(path):
         for d in dirs:
             direc = os.path.join(root, d)
             delEmpty(direc)
-        
+
         for name in files:
             f = os.path.join(root, name)
 
