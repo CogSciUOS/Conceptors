@@ -1,4 +1,4 @@
-import sys
+
 import os
 
 
@@ -11,8 +11,8 @@ def delEmpty(path):
         
         for name in files:
             f = os.path.join(root, name)
-            if os.path.getsize(f) < 1500:
-                print(f)
+
+            if os.path.getsize(f) < 1500 and name != '.gitignore':
                 os.remove(f)
 
 path = os.path.abspath('../data/birddb/syll')
