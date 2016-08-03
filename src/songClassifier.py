@@ -2,15 +2,15 @@
 """
 Created on Wed Jun 15 17:28:51 2016
 
-@author: asus
+@author: Richard Gast
 """
 
 import os.path
 import sys
 sys.path.append('C:/Users/asus/Dropbox/Conceptors/Task1_Recognition/runSyllClassScripts')
 import numpy as np
-from rf_reservoir_c import *
-from hierarchical_c import *
+from rfReservoirConceptor import *
+from hierarchicalConceptor import *
 from syllableClassifier import *
 import itertools
 
@@ -140,12 +140,14 @@ class SongClassifier:
             for i,t in enumerate(pattTimesteps):
                 
                 patt = np.zeros((1,self.nSylls))
-                for j in range(t):
-                    pause_length = np.random.randint(1, high = 3)
+                for j in range(round(t/len(self.Songs[i]))):
+                    pause_length = np.random.randint(10)
                     patt_tmp = np.concatenate((evidences[t_all + j*len(self.Songs[i]) : t_all + (j+1)*len(self.Songs[i]),:], np.zeros((pause_length,self.nSylls))), axis = 0)
                     patt = np.vstack((patt, patt_tmp))
-                pause_length = np.random.randint(1, high = 7)
-                patt = np.vstack((patt, np.zeros((pause_length, self.nSylls))))
+                    pattTimesteps[i] += pause_length
+                patt = patt[1:,:]
+                #pause_length = np.random.randint(1, high = 7)
+                #patt = np.vstack((patt, np.zeros((pause_length, self.nSylls))))
                 #self.patterns.append(evidences[t_all:t_all + t*len(self.Songs[i]),:])
                 self.patterns.append(patt)
                 t_all += t*len(self.Songs[i])
