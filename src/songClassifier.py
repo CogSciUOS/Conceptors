@@ -26,7 +26,7 @@ class SongClassifier:
         self.nSylls = len(self.Sylls)
         self.Songs = []
 
-    def addSong(self, nSongSylls, sequenceReps = 1, song = None):
+    def addSong(self, nSongSylls = 5, sequenceReps = 1, song = None):
         """
         Function that generates a deterministic song from the syllable list
 
