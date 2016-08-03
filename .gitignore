@@ -3,3 +3,6 @@
 .DS_Store
 *.pyc
 *.swp
+
+*.pkl
+*.pickle
