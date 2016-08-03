@@ -50,6 +50,6 @@ for s in range(len(SC.Songs)):
 show()
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (30,50), nLayers = 2, useSyllRecog = False, SyllPath = None,
+SC.run(pattRepRange = (30,50), nLayers = 2, useSyllRecog = True, SyllPath = '../data/birddb/',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 SC.H.plot_gamma()
