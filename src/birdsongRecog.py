@@ -27,8 +27,8 @@ HFCParams = {'sigma': 0.99,
 
 
 # create random songs and load them into a RFC
-s1_length = 8
-s2_length = 10
+s1_length = 2
+s2_length = 2
 s3_length = 2
 SC.addSong(s1_length)
 SC.addSong(s2_length)
@@ -50,6 +50,6 @@ for s in range(len(SC.Songs)):
 show()
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (30,50), nLayers = 2, useSyllRecog = False, SyllPath = None,
+SC.run(pattRepRange = (10,11), nLayers = 2, useSyllRecog = False, SyllPath = None,
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 SC.H.plot_gamma()
