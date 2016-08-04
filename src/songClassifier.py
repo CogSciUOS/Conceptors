@@ -83,7 +83,7 @@ class SongClassifier:
         self.R.load(self.patterns, t_learn = t_learn, t_cadapt = t_cadapt, t_wash = t_wash, **loadingParams)
         self.R.recall(t_recall = t_recall)
 
-    def run(self, patterns = None, nLayers = 3, pattRepRange = (2,20), useSyllRecog = False, SyllPath = None,
+    def run(self, patterns = None, nLayers = 3, pattRepRange = (2,20), maxPauseLength = 10, useSyllRecog = False, SyllPath = None,
             nTrain = 30, cType = 2, dataPrepParams = {}, cLearningParams = {}, HFCParams = {}):
             #sigma = 0.99, drift = 0.01, gammaRate = 0.002, dcsv = 8, SigToNoise = 0.5,
             #gammaPos = 25, gammaNeg = 20, cType = 2):
@@ -97,6 +97,7 @@ class SongClassifier:
         :param nLayers:         Number of layers the HFC should consist of (default = 3)
         :param pattRepRange:    tuple including the lower and upper bound of the uniform distribution
                                 from which the number of repetitions of each song are drawn
+        :param maxPauseLength:  Maximum number of 'zero' syllables to be added after a song ended (default = 10)
         :param useSyllRecog:    If True, train a syllableClassifier on all syllables stored in the songClassifier
                                 and run classification on the stored patterns afterwards. The resulting evidences
                                 will then be used to run the HFC
@@ -138,14 +139,11 @@ class SongClassifier:
 
                 patt = np.zeros((1,self.nSylls))
                 for j in range(round(t/len(self.Songs[i]))):
-                    pause_length = np.random.randint(10)
+                    pause_length = np.random.randint(maxPauseLength)
                     patt_tmp = np.concatenate((evidences[t_all + j*len(self.Songs[i]) : t_all + (j+1)*len(self.Songs[i]),:], np.zeros((pause_length,self.nSylls))), axis = 0)
                     patt = np.vstack((patt, patt_tmp))
                     pattTimesteps[i] += pause_length
                 patt = patt[1:,:]
-                #pause_length = np.random.randint(1, high = 7)
-                #patt = np.vstack((patt, np.zeros((pause_length, self.nSylls))))
-                #self.patterns.append(evidences[t_all:t_all + t*len(self.Songs[i]),:])
                 self.patterns.append(patt)
                 t_all += t*len(self.Songs[i])
 

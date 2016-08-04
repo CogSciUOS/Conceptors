@@ -107,7 +107,7 @@ class Hierarchical:
                 
                 for l in range(self.M):
                     w           = np.dot(self.P,gamma[l].T**2)
-                    gamma_star  = gamma[l] + gammaRate*self.n_patts*(np.dot(np.dot(np.transpose(z[l]**2-w),self.P),np.diag(gamma[l]))+drift*(0.5-gamma[l]))                 
+                    gamma_star  = gamma[l] + gammaRate*self.n_patts*(np.dot(np.dot(np.transpose(z[l]**2-w),self.P),np.diag(gamma[l]))+drift*(0.5-gamma[l]))              
                     gamma[l]    = gamma_star/np.sum(gamma_star)  
                     
                 gammaColl[:,:,t] = gamma  
@@ -142,8 +142,14 @@ class Hierarchical:
         
         for l in range(self.M):
             figure()
+            idx = 0
             for p in range(self.n_patts): 
-                plot(xspace ,self.gammaColl[l,p,:].T, label="Pattern "+str(p))
+                plot(xspace ,self.gammaColl[l,p,:].T, label='Gamma of pattern '+str(p))
+                realSongFull = np.zeros_like(xspace)
+                realSong = np.sum(self.patterns[p], axis = 1) != 0
+                realSongFull[idx:idx + len(realSong)] = realSong
+                idx += len(realSong)
+                fill_between(xspace, 0, 1, where=realSongFull == 1, facecolor=np.random.rand(3,1), alpha=0.2, label = 'Pattern ' +str(p))
             legend()
             suptitle('Gamma lvl' + str(l))
         show()
