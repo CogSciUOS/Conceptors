@@ -21,10 +21,10 @@ RFCParams = {'N': 400,
 loadingParams = {'gradient_c': True}
 dataPrepParams = {}
 cLearningParams = {}
-HFCParams = {'sigma': 0.99,
+HFCParams = {'sigma': 0.01,
              'drift': 0.01,
-             'gammaRate': 0.002,
-             'dcsv': 8,
+             'gammaRate': 0.004,
+             'dcsv': 2,
              'SigToNoise': float('inf')}
 
 

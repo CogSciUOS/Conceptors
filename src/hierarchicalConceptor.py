@@ -97,7 +97,7 @@ class Hierarchical:
                 tauColl[:,t] = tau        
                 
                 for l in reversed(range(self.M)):             #Calculate the conceptors vectors seperately because you need to loop top down.
-                    w = np.dot(self.P,gamma[l].T**2) # why only square the gammas? TR p. 124
+                    w = np.dot(self.P,gamma[l].T**2)
                     if (l == (self.M - 1)):
                         c = w/(w + self.RFC.alpha**-2)
                         
@@ -106,9 +106,8 @@ class Hierarchical:
                     c_fin[l] = c        
                 
                 for l in range(self.M):
-                    w           = np.dot(self.P,gamma[l].T**2) # again, why square gamma only?
-                    gamma_star  = gamma[l] + gammaRate*4.*(np.dot(np.dot(np.transpose(z[l]**2-w),self.P),np.diag(gamma[l]))+drift*(0.5-gamma[l]))
-                    # where does the 4 come from?                    
+                    w           = np.dot(self.P,gamma[l].T**2)
+                    gamma_star  = gamma[l] + gammaRate*self.n_patts*(np.dot(np.dot(np.transpose(z[l]**2-w),self.P),np.diag(gamma[l]))+drift*(0.5-gamma[l]))                 
                     gamma[l]    = gamma_star/np.sum(gamma_star)  
                     
                 gammaColl[:,:,t] = gamma  
