@@ -1,23 +1,30 @@
-
 """ Libraries """
+
+from matplotlib.pyplot import *
 import os
 import argparse
 import pickle
+import sys
+
+import evaluation.crossSylidation as cS
 import syllableClassifier as sC
 
-from matplotlib.pyplot import *
-from evaluation import crossSylidation as cS
-
+import numpy as np
 
 np.random.seed(255)
 
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
-def runSyllClass(path='../../data/birddb/syll/', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF', mfccN=25,
+# %%
+
+""" Function """
+
+
+def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF', mfccN=25,
                  invCoeffOrder=True, winsize=20, melFramesN=64, smoothL=4, polyOrder=3, incDer=[True, True],
                  nComp=10, usePCA=False, resN=10, specRad=1.2, biasScale=0.2, inpScale=1., conn=1.,
-                 gammaPos=25, gammaNeg=27, plotExample=False):
+                 gammaPos=25, gammaNeg=27, plotExample=False, scriptsDir=None):
     """ Function that runs syllable classification in a supervised manner using positive, negative and combined conceptors.
 
     :param path: Full path to folder that includes subfolders for syllables which include samples of datatype wave (string)
@@ -43,6 +50,7 @@ def runSyllClass(path='../../data/birddb/syll/', syllN=5, trainN=30, cvalRuns=1,
     :param gammaPos: Aperture to be used for positive conceptors
     :param gammaNeg: Aperture to be used for negative conceptors
     :param plotExample: boolean, if True: Plot raw & smoothed mfcc data as well as (pos, neg, comb) evidences for last run (default = False)
+    :param scriptsDir: Directory of all scripts needed for this function
 
     :returns: cvalResults: Mean classification performance on test data over all runs for positive, negative and combined conceptors (list)
     """
@@ -79,6 +87,7 @@ def runSyllClass(path='../../data/birddb/syll/', syllN=5, trainN=30, cvalRuns=1,
 
     syllClass = sC.syllableClassifier(path)
     cvalResults = cS.crossVal(cvalRuns, trainN, syllN, syllClass, gammaPos, gammaNeg, **classParameters)
+    # cvalResults = cS.crossValAperture(cvaRuns, trainN, syllN, syllClass, gammaPos, gammaNeg, **classParamters)
 
     """ Plotting """
 
@@ -87,10 +96,10 @@ def runSyllClass(path='../../data/birddb/syll/', syllN=5, trainN=30, cvalRuns=1,
     if plotExample:
 
         sylls = figure(figsize=(15, 18))
-        syllables = [2, 7]
+        syllables = [0, 1]
         for syllable_i, syllable in enumerate(syllables):
             subplot(3, len(syllables), syllable_i + 1)
-            utteranceDataRaw = syllClass.trainDataDS[syllable - 1][0][0]
+            utteranceDataRaw = syllClass.trainDataDS[syllable][0][0]
             plot(utteranceDataRaw)
             xlim(0, 9000)
             ylim(-18000, 18000)
@@ -201,22 +210,20 @@ def runSyllClass(path='../../data/birddb/syll/', syllN=5, trainN=30, cvalRuns=1,
 
 # %%
 
-"""
-Argument parser, providing the configuration for the command line arguments
-and setting sensible default values.
-"""
+""" argument parser """
+
 parser = argparse.ArgumentParser(description='Passes arguments on to syllable Classifier function')
 
 parser.add_argument(
     '-path',
-    default='../../data/birddb/syll/',
+    default='../../data/birddb/syll',
     type=str,
     help='directory to the folder that includes syllable folders with wave data'
 )
 parser.add_argument(
     '-syllN',
     type=int,
-    default=30,
+    default=3,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
@@ -352,14 +359,15 @@ parser.add_argument(
     help='Subdirectory in which results are to be stored'
 )
 
-""" Run script """
-args = None
+# %%
+
+""" Run script via command window """
 
 try:
     args = parser.parse_args()
 except:
-    print("Some of the provided arguments have the wrong type or positional arguments are missing!")
-
+    print('A parameter was either missing or wrong')
+    sys.exit(0)
 
 results = runSyllClass(args.path, args.syllN, args.trainN, args.cvalRuns, args.sampRate, args.interpolType,
                        args.mfccN, args.invCoeffOrder, args.winsize, args.melFramesN, args.smoothL, args.polyOrder,
@@ -372,4 +380,3 @@ if not args.targetDir:
     pickle.dump(output, open('Results.pkl', 'wb'))
 else:
     pickle.dump(output, open(os.path.abspath(args.targetDir + '/' + 'Results.pkl'), 'wb'))
-

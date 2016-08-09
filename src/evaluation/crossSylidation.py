@@ -61,8 +61,9 @@ def crossVal(cval_runs, n_train, n_syllables, model, gamma_pos, gamma_neg, prepP
             ind_tmp = np.array(ind_tmp)
 
             samples.append(ind_tmp)
+
         if cval_runs > 1:
-            model.prepData(n_syllables, n_train, n_test, samples, **prepParams)
+            model.prepData(n_syllables, n_train, n_test, samples=samples, **prepParams)
         else:
             model.prepData(n_syllables, n_train, n_test, **prepParams)
         model.cLearning(gamma_pos, gamma_neg, **clearnParams)
