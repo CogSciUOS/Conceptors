@@ -1,7 +1,9 @@
 
 import os
 
-
+'''
+This script deletes the empty or too short wav files from the syllable folder.
+'''
 def delEmpty(path):
     for root, dirs, files in os.walk(path, topdown=False):
 
@@ -17,3 +19,4 @@ def delEmpty(path):
 
 path = os.path.abspath('birddb/syll')
 delEmpty(path)
+

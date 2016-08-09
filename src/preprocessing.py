@@ -1,3 +1,4 @@
+
 """
 Basis class for running the birdsong recognition.
 """
@@ -138,6 +139,9 @@ def getShiftsAndScales(data):
     :returns shifts: negative minimum mfcc for each of the 12 channels (vector of length 12)
     :returns scales: 1 / (maximum mfcc - minimum mfcc) for each of the 12 channels (vector of length 12)
     """
+
+    if len(data) == 0:
+        return 0, 0
     
     allData = []
     for syllable in data:
@@ -277,4 +281,3 @@ def mfccDerivates(data, Der1 = True, Der2 = True):
                 samples.append(newData)
             devdata.append(samples)
     return devdata
-                

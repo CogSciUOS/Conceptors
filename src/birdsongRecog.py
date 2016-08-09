@@ -7,7 +7,8 @@ from songClassifier import *
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
-#%%
+import warnings
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 # create list of syllables and initialize SongClassifier with it
 syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej']
@@ -35,9 +36,11 @@ plotBeliefs = True
 #%%
 
 # create random songs and load them into a RFC
+
 s1_length = 3
 s2_length = 5
-#s3_length = 4
+s3_length = 4
+
 SC.addSong(s1_length)
 SC.addSong(s2_length)
 #SC.addSong(s3_length)
@@ -59,7 +62,7 @@ if plotLoadedSongs:
     show()
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (10,20), maxPauseLength = 10, nLayers = 2, useSyllRecog = True, SyllPath = 'D:\Data\Projects\StudyProject\syll',
+SC.run(pattRepRange = (10,20), maxPauseLength = 10, nLayers = 2, useSyllRecog = True, SyllPath = '../data/birddb/syll/',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 if plotBeliefs:
     SC.H.plot_gamma()

@@ -42,15 +42,12 @@ class Reservoir:
       
         for i,p in zip(range(self.n_patts), self.patterns):
 
-            x =         np.zeros([self.N]) 
-            xOld =      np.zeros([self.N]) 
+            x =         np.zeros([self.N])
             xColl =     np.zeros([self.N,self.t_learn])  
             xOldColl =  np.zeros([self.N,self.t_learn])  
             uColl =     np.zeros([self.n_ip_dim,self.t_learn])    
             Cc =        np.zeros([self.N,self.N])            
 
-            #lag = []            
-            
             for t in range(self.t_learn+self.t_wash):
                 
                 if not type(p == np.ndarray):
