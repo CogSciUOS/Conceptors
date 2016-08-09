@@ -24,7 +24,7 @@ class Reservoir:
         self.n_patts = len(self.patterns)
         
         if type(self.patterns[0]) == np.ndarray:
-            self.n_ip_dim = len(patterns[0][0])
+            self.n_ip_dim = len(patterns[0])
         else:
             if type(self.patterns[0](0)) == np.float64:
                 self.n_ip_dim = 1

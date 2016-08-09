@@ -20,7 +20,7 @@ class syllableClassifier:
     
         self.folder = fname
     
-    def prepData(self, n_syllables, n_train, n_test, syll_names = None, samples = None, SR = 20000, dsType = 'mean', mel_channels = 12, invCoeffOrder = False, winsize = 20, frames = 64, smoothLength = 5, polyOrder = 3, incDer = [True,True], nComp = 10, usePCA = False):
+    def prepData(self, n_syllables, n_train, n_test, samples = None, syll_names = None, SR = 20000, dsType = 'mean', mel_channels = 12, invCoeffOrder = False, winsize = 20, frames = 64, smoothLength = 5, polyOrder = 3, incDer = [True,True], nComp = 10, usePCA = False):
         """ Function that performs the following preprocessing steps on data in file:
         1. loading
         2. downsampling
@@ -214,7 +214,7 @@ class syllableClassifier:
         if pattern is not None:
             self.testData = np.array([self.testDataFinal[np.argmax(syll)] for syll in pattern])
         else:
-            self.testData = self.testDataFinal
+            self.testData = self.testDataFinal[0]
         
         for syll_i, syllable in enumerate(self.testData):
             

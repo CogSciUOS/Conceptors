@@ -11,11 +11,13 @@ from evaluation import crossSylidation as cS
 
 np.random.seed(255)
 
+import warnings
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
-def runSyllClass(path='../../data/birddb/', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF', mfccN=25,
+def runSyllClass(path='../../data/birddb/syll/', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF', mfccN=25,
                  invCoeffOrder=True, winsize=20, melFramesN=64, smoothL=4, polyOrder=3, incDer=[True, True],
                  nComp=10, usePCA=False, resN=10, specRad=1.2, biasScale=0.2, inpScale=1., conn=1.,
-                 gammaPos=25, gammaNeg=27, plotExample=False, scriptsDir=None):
+                 gammaPos=25, gammaNeg=27, plotExample=False):
     """ Function that runs syllable classification in a supervised manner using positive, negative and combined conceptors.
 
     :param path: Full path to folder that includes subfolders for syllables which include samples of datatype wave (string)
@@ -41,7 +43,6 @@ def runSyllClass(path='../../data/birddb/', syllN=5, trainN=30, cvalRuns=1, samp
     :param gammaPos: Aperture to be used for positive conceptors
     :param gammaNeg: Aperture to be used for negative conceptors
     :param plotExample: boolean, if True: Plot raw & smoothed mfcc data as well as (pos, neg, comb) evidences for last run (default = False)
-    :param scriptsDir: Directory of all scripts needed for this function
 
     :returns: cvalResults: Mean classification performance on test data over all runs for positive, negative and combined conceptors (list)
     """
@@ -78,7 +79,6 @@ def runSyllClass(path='../../data/birddb/', syllN=5, trainN=30, cvalRuns=1, samp
 
     syllClass = sC.syllableClassifier(path)
     cvalResults = cS.crossVal(cvalRuns, trainN, syllN, syllClass, gammaPos, gammaNeg, **classParameters)
-    # cvalResults = cS.crossValAperture(cvaRuns, trainN, syllN, syllClass, gammaPos, gammaNeg, **classParamters)
 
     """ Plotting """
 
@@ -201,18 +201,20 @@ def runSyllClass(path='../../data/birddb/', syllN=5, trainN=30, cvalRuns=1, samp
 
 # %%
 
-""" argument parser """
-
+"""
+Argument parser, providing the configuration for the command line arguments
+and setting sensible default values.
+"""
 parser = argparse.ArgumentParser(description='Passes arguments on to syllable Classifier function')
 
 parser.add_argument(
-    'path',
-    default='../../data/birddb/',
+    '-path',
+    default='../../data/birddb/syll/',
     type=str,
     help='directory to the folder that includes syllable folders with wave data'
 )
 parser.add_argument(
-    'syllN',
+    '-syllN',
     type=int,
     default=30,
     help='number of syllables to include in train/test data'
@@ -350,24 +352,19 @@ parser.add_argument(
     help='Subdirectory in which results are to be stored'
 )
 
-# %%
-
-""" Run script via command window """
+""" Run script """
 args = None
 
 try:
     args = parser.parse_args()
-    print(args)
 except:
-    print("no arguments have been provided to the program- using local parameters instead")
+    print("Some of the provided arguments have the wrong type or positional arguments are missing!")
 
-if args is not None:
-    results = runSyllClass(args.path, args.syllN, args.trainN, args.cvalRuns, args.sampRate, args.interpolType,
+
+results = runSyllClass(args.path, args.syllN, args.trainN, args.cvalRuns, args.sampRate, args.interpolType,
                        args.mfccN, args.invCoeffOrder, args.winsize, args.melFramesN, args.smoothL, args.polyOrder,
                        args.incDer, args.nComp, args.usePCA, args.resN, args.specRad, args.biasScale, args.inpScale,
                        args.conn, args.gammaPos, args.gammaNeg, args.plotExample)
-else:
-    results = runSyllClass()
 
 output = [results, args]
 
