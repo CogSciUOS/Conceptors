@@ -1,8 +1,6 @@
 ## Databases
-This folder contains different databases and sources for songdata. Mostly those are .wav files
-and their corresponding textgrid information. Since those are quite big only a
-few examples are actually stored in the repository, but there is information on how
-to get all the files.
+This folder contains the database and sources for songdata. Mostly those are .wav files
+and their corresponding textgrid information. Since those are quite big only a script is provided to retrieve those.
 
 ### birddb
 This database can be found on the website of the [Taylor Lab](http://taylor0.biology.ucla.edu/birdDBQuery/) and used for querying different bird species for data files of their songs.

@@ -4,6 +4,8 @@ syllable sequences.
 """
 
 from songClassifier import *
+import warnings
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
@@ -21,37 +23,46 @@ RFCParams = {'N': 400,
 loadingParams = {'gradient_c': True}
 dataPrepParams = {}
 cLearningParams = {}
-HFCParams = {'sigma': 0.99,
-             'drift': 0.01,
-             'gammaRate': 0.002,
-             'dcsv': 8,
+HFCParams = {'sigma': 0.02,
+             'drift': 0.05,
+             'gammaRate': 0.004,
+             'dcsv': 2,
              'SigToNoise': float('inf')}
 
+# include plots
+plotLoadedSongs = True
+plotBeliefs = True
+
+#%%
 
 # create random songs and load them into a RFC
-s1_length = 2
-s2_length = 2
-s3_length = 2
+
+s1_length = 3
+s2_length = 5
+s3_length = 4
+
 SC.addSong(s1_length)
 SC.addSong(s2_length)
-SC.addSong(s3_length)
+#SC.addSong(s3_length)
 SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)
 
 # plot RFC recall
-plotrange = 50
-figure()
-for s in range(len(SC.Songs)):
-    recall = np.argmax(SC.R.Y_recalls[s][0:plotrange,:], axis = 1)
-    target = np.argmax(SC.patterns[s][0:plotrange,:], axis = 1)
-    subplot(len(SC.Songs),1,s+1)
-    plot(recall, 'r')
-    plot(target, 'b')
-    ylim([0,SC.nSylls - 1])
-    ylabel(' Syllable #')
-    xlabel('t')
-show()
+if plotLoadedSongs:
+    plotrange = 50
+    figure()
+    for s in range(len(SC.Songs)):
+        recall = np.argmax(SC.R.Y_recalls[s][0:plotrange,:], axis = 1)
+        target = np.argmax(SC.patterns[s][0:plotrange,:], axis = 1)
+        subplot(len(SC.Songs),1,s+1)
+        plot(recall, 'r')
+        plot(target, 'b')
+        ylim([0,SC.nSylls - 1])
+        ylabel(' Syllable #')
+        xlabel('t')
+    show()
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (10,11), nLayers = 2, useSyllRecog = False, SyllPath = None,
+SC.run(pattRepRange = (10,20), maxPauseLength = 10, nLayers = 2, useSyllRecog = True, SyllPath = '../data/birddb/syll/',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
-SC.H.plot_gamma()
+if plotBeliefs:
+    SC.H.plot_gamma()

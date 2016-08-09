@@ -50,7 +50,7 @@ def zeroPad(data):
     :returns syllables: list with same number of entries as data, but with zero
                         padded arrays
     """
-    
+
     max_length = 0
     syllables = []
     
