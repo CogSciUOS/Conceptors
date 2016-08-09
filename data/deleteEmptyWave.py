@@ -15,5 +15,5 @@ def delEmpty(path):
             if os.path.getsize(f) < 1500 and name != '.gitignore':
                 os.remove(f)
 
-path = os.path.abspath('../data/birddb/syll')
+path = os.path.abspath('birddb/syll')
 delEmpty(path)
