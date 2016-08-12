@@ -29,7 +29,8 @@ class Hierarchical:
         self.plotRange     = plotRange if plotRange  is not None else self.pattTimesteps
         
         gamma = np.ones([self.M,self.n_patts])
-        gamma = (1./np.linalg.norm(gamma[0]))*gamma
+        #gamma = (1./np.linalg.norm(gamma[0,:]))*gamma
+        gamma = (1./np.sum(gamma[0,:])) * gamma
         
         tau = np.zeros([self.M])
         tau[1:] = 0.5
@@ -107,8 +108,8 @@ class Hierarchical:
                 
                 for l in range(self.M):
                     w           = np.dot(self.P,gamma[l].T**2)
-                    gamma_star  = gamma[l] + gammaRate*self.n_patts*(np.dot(np.dot(np.transpose(z[l]**2-w),self.P),np.diag(gamma[l]))+drift*(0.5-gamma[l]))              
-                    gamma[l]    = gamma_star/np.sum(gamma_star)  
+                    gamma_star  = gamma[l] + gammaRate*self.n_patts*(np.dot(np.dot(np.transpose(z[l]**2-w),self.P),np.diag(gamma[l]))+drift*(0.5 - gamma[l]))
+                    gamma[l]    = np.exp(gamma_star)/np.sum(np.exp(gamma_star))  
                     
                 gammaColl[:,:,t] = gamma  
         
