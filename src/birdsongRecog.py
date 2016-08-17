@@ -7,8 +7,7 @@ from songClassifier import *
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
-import warnings
-warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
+#%%
 
 # create list of syllables and initialize SongClassifier with it
 syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej']
@@ -23,10 +22,10 @@ RFCParams = {'N': 400,
 loadingParams = {'gradient_c': True}
 dataPrepParams = {}
 cLearningParams = {}
-HFCParams = {'sigma': 0.02,
-             'drift': 0.05,
-             'gammaRate': 0.004,
-             'dcsv': 2,
+HFCParams = {'sigma': 0.82,
+             'drift': 0.01,
+             'gammaRate': 0.005,
+             'dcsv': 4,
              'SigToNoise': float('inf')}
 
 # include plots
@@ -36,14 +35,12 @@ plotBeliefs = True
 #%%
 
 # create random songs and load them into a RFC
-
 s1_length = 3
 s2_length = 5
 s3_length = 4
-
 SC.addSong(s1_length)
 SC.addSong(s2_length)
-#SC.addSong(s3_length)
+SC.addSong(s3_length)
 SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)
 
 # plot RFC recall
@@ -62,7 +59,7 @@ if plotLoadedSongs:
     show()
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (10,20), maxPauseLength = 10, nLayers = 2, useSyllRecog = True, SyllPath = '../data/birddb/syll/',
+SC.run(pattRepRange = (10,20), maxPauseLength = 3, nLayers = 2, useSyllRecog = True, SyllPath = 'D:\Data\Projects\StudyProject\syll',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 if plotBeliefs:
     SC.H.plot_gamma()
