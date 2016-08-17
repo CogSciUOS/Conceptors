@@ -7,6 +7,7 @@ import numpy as np
 import reservoirConceptor as c
 import functions as fct
 import preprocessing as prep
+import random
 
 
 # %%
@@ -63,25 +64,21 @@ class syllableClassifier:
         """ Load Data """
 
         syllables = [files for files in os.listdir(self.folder)]
+        syllables.remove('.gitignore')
 
         self.trainDataRaw = []
         self.testDataRaw = []
         self.skipped_syllables = []
 
         if syll_names is not None:
-            # for i,syll in enumerate(syllables):
+            # if syllable names are provided use those
             for i, syll in enumerate(syll_names):
                 if np.sum(np.array(syllables) == syll) == 0:
                     print('Warning: Syllable ', syll, ' not found in folder.')
                     self.n_syllables -= 1
                     continue
 
-                # print("DEBUG:", self.samples)
                 if not self.samples:
-                    # print("DEBUG:", self.folder + '/' + syll)
-                    # print("DEBUG:", self.testDataRaw)
-                    print("DEBUG:", self.n_test)
-                    print("DEBUG:", i)
                     self.trainDataRaw.append(prep.load_data(self.folder + '/' + syll, self.n_train, 0))
                     self.testDataRaw.append(prep.load_data(self.folder + '/' + syll, self.n_test[i], self.n_train))
                 else:
@@ -89,15 +86,15 @@ class syllableClassifier:
                                                             sample_order=self.samples[i][0:n_train]))
                     self.testDataRaw.append(prep.load_data(self.folder + '/' + syll, self.n_test[i], self.n_train,
                                                            sample_order=self.samples[i][n_train::]))
-                success = True
         else:
-            stepsize = len(syllables) // n_syllables
-            ind = np.arange(0, stepsize * n_syllables, stepsize)
+            # sample random from the list of available syllables
+            ind = random.sample(range(1, len(syllables)), n_syllables)
 
             for i in range(n_syllables):
                 success = False
                 while not success:
                     try:
+                        # try to find a syllable that fullfills the condition of the n_train length
                         if not self.samples:
                             self.trainDataRaw.append(
                                 prep.load_data(self.folder + '/' + syllables[ind[i]], self.n_train, 0))
