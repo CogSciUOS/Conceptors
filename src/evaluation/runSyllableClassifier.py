@@ -87,7 +87,6 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
 
     syllClass = sC.syllableClassifier(path)
     cvalResults = cS.crossVal(cvalRuns, trainN, syllN, syllClass, gammaPos, gammaNeg, **classParameters)
-    # cvalResults = cS.crossValAperture(cvaRuns, trainN, syllN, syllClass, gammaPos, gammaNeg, **classParamters)
 
     """ Plotting """
 
@@ -223,7 +222,7 @@ parser.add_argument(
 parser.add_argument(
     '-syllN',
     type=int,
-    default=42,
+    default=3,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
