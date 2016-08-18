@@ -132,7 +132,3 @@ class RF_Reservoir:
                 if t > self.t_wash: y_recall[t-self.t_wash]= np.dot(self.W_out,r)
                 
             self.Y_recalls.append(y_recall)   
-            
-
-            
-            

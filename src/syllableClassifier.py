@@ -6,7 +6,7 @@ import os.path
 import numpy as np
 import reservoirConceptor as c
 import functions as fct
-# import preprocessing as prep
+import random
 
 
 # %%
@@ -19,7 +19,6 @@ class syllableClassifier:
         """
 
         self.folder = fname
-
 
     def cLearning(self, gamma_pos=25, gamma_neg=27, N=10, SR=1.2, bias_scale=1.0, inp_scale=0.2, conn=1):
         """ Function that learns positive and negative conceptors on data with the following steps:
