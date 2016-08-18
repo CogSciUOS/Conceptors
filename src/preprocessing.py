@@ -12,6 +12,8 @@ import math
 import sklearn.decomposition as sd
 import os
 import scipy.io.wavfile as wav
+import random
+
 from python_speech_features import mfcc
 
 def preprocess(n_syllables, n_train, n_test, syll_names=None, samples=None,
@@ -52,25 +54,22 @@ def preprocess(n_syllables, n_train, n_test, syll_names=None, samples=None,
     """ Load Data """
 
     syllables = [files for files in os.listdir(self.folder)]
+    syllables.remove('.gitignore')
+
 
     trainDataRaw = []
     testDataRaw = []
     skipped_syllables = []
 
+    # if syllable names are provided use those
     if syll_names is not None:
-        # for i,syll in enumerate(syllables):
         for i, syll in enumerate(syll_names):
             if np.sum(np.array(syllables) == syll) == 0:
                 print('Warning: Syllable ', syll, ' not found in folder.')
                 n_syllables -= 1
                 continue
 
-            # print("DEBUG:", self.samples)
             if not samples:
-                # print("DEBUG:", self.folder + '/' + syll)
-                # print("DEBUG:", self.testDataRaw)
-                print("DEBUG:", n_test)
-                print("DEBUG:", i)
                 trainDataRaw.append(load_data(folder + '/' + syll, n_train, 0))
                 testDataRaw.append(load_data(folder + '/' + syll, n_test[i], n_train))
             else:
@@ -78,15 +77,15 @@ def preprocess(n_syllables, n_train, n_test, syll_names=None, samples=None,
                                                         sample_order=samples[i][0:n_train]))
                 testDataRaw.append(load_data(folder + '/' + syll, n_test[i], n_train,
                                                        sample_order=samples[i][n_train::]))
-            success = True
     else:
-        stepsize = len(syllables) // n_syllables
-        ind = np.arange(0, stepsize * n_syllables, stepsize)
+        # sample random from the list of available syllables
+        ind = random.sample(range(1, len(syllables)), n_syllables)
 
         for i in range(n_syllables):
             success = False
             while not success:
                 try:
+                    # try to find a syllable that fullfills the condition of the n_train length
                     if not samples:
                         trainDataRaw.append(
                             load_data(folder + '/' + syllables[ind[i]], n_train, 0))
