@@ -56,7 +56,6 @@ def preprocess(n_syllables, n_train, n_test, syll_names=None, samples=None,
     syllables = [files for files in os.listdir(self.folder)]
     syllables.remove('.gitignore')
 
-
     trainDataRaw = []
     testDataRaw = []
     skipped_syllables = []
