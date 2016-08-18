@@ -16,7 +16,7 @@ import random
 
 from python_speech_features import mfcc
 
-def preprocess(n_syllables, n_train, n_test, syll_names=None, samples=None,
+def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None, samples=None,
              SR=20000, dsType='mean', mel_channels=12, invCoeffOrder=False, winsize=20,
              frames=64, smoothLength=5, polyOrder=3, incDer=[True, True], nComp=10, usePCA=False):
 
@@ -53,7 +53,7 @@ def preprocess(n_syllables, n_train, n_test, syll_names=None, samples=None,
 
     """ Load Data """
 
-    syllables = [files for files in os.listdir(self.folder)]
+    syllables = [files for files in os.listdir(syllable_directory)]
     syllables.remove('.gitignore')
 
     trainDataRaw = []
@@ -63,19 +63,27 @@ def preprocess(n_syllables, n_train, n_test, syll_names=None, samples=None,
     # if syllable names are provided use those
     if syll_names is not None:
         for i, syll in enumerate(syll_names):
+            syll_path = os.path.join(syllable_directory, syll)
+
             if np.sum(np.array(syllables) == syll) == 0:
                 print('Warning: Syllable ', syll, ' not found in folder.')
                 n_syllables -= 1
                 continue
 
             if not samples:
-                trainDataRaw.append(load_data(folder + '/' + syll, n_train, 0))
-                testDataRaw.append(load_data(folder + '/' + syll, n_test[i], n_train))
+                trainDataRaw.append(
+                    load_data(syll_path, n_train, 0)
+                )
+                testDataRaw.append(
+                    load_data(syll_path, n_test[i], n_train)
+                )
             else:
-                trainDataRaw.append(load_data(folder + '/' + syll, n_train, 0,
-                                                        sample_order=samples[i][0:n_train]))
-                testDataRaw.append(load_data(folder + '/' + syll, n_test[i], n_train,
-                                                       sample_order=samples[i][n_train::]))
+                trainDataRaw.append(
+                    load_data(syll_path, n_train, 0, sample_order=samples[i][0:n_train])
+                )
+                testDataRaw.append(
+                    load_data(syll_path, n_test[i], n_train, sample_order=samples[i][n_train::])
+                )
     else:
         # sample random from the list of available syllables
         ind = random.sample(range(1, len(syllables)), n_syllables)
@@ -84,19 +92,22 @@ def preprocess(n_syllables, n_train, n_test, syll_names=None, samples=None,
             success = False
             while not success:
                 try:
+                    syll_path = os.path.join(syllable_directory, syllables[ind[i]])
                     # try to find a syllable that fullfills the condition of the n_train length
                     if not samples:
                         trainDataRaw.append(
-                            load_data(folder + '/' + syllables[ind[i]], n_train, 0))
+                            load_data(syll_path, n_train, 0)
+                        )
                         testDataRaw.append(
-                            load_data(folder + '/' + syllables[ind[i]], n_test[i], n_train))
+                            load_data(syll_path, n_test[i], n_train)
+                        )
                     else:
                         trainDataRaw.append(
-                            load_data(folder + '/' + syllables[ind[i]], n_train, 0,
-                                           sample_order=samples[i][0:n_train]))
+                            load_data(syll_path, n_train, 0, sample_order=samples[i][0:n_train])
+                        )
                         testDataRaw.append(
-                            load_data(folder + '/' + syllables[ind[i]], n_test[i], n_train,
-                                           sample_order=samples[i][n_train::]))
+                            load_data(syll_path, n_test[i], n_train, sample_order=samples[i][n_train::])
+                        )
                     success = True
                 except:
                     skipped_syllables.append(syllables[ind[i]])
@@ -105,7 +116,6 @@ def preprocess(n_syllables, n_train, n_test, syll_names=None, samples=None,
                         ind[i] += 1
                     else:
                         break
-                    pass
 
     """ Downsampling """
 
