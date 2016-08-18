@@ -6,7 +6,7 @@ import os.path
 import numpy as np
 import reservoirConceptor as c
 import functions as fct
-import preprocessing as prep
+# import preprocessing as prep
 
 
 # %%
@@ -20,140 +20,6 @@ class syllableClassifier:
 
         self.folder = fname
 
-    def prepData(self, n_syllables, n_train, n_test, syll_names=None, samples=None,
-                 SR=20000, dsType='mean', mel_channels=12, invCoeffOrder=False, winsize=20,
-                 frames=64, smoothLength=5, polyOrder=3, incDer=[True, True], nComp=10, usePCA=False):
-
-        """ Function that performs the following preprocessing steps on data in file:
-        1. loading
-        2. downsampling
-        3. Extraction of Mel Frequency Cepstral Coefficients
-        4. Extraction of shift and scale of training data
-        5. Data normalization with shift and scale of training data
-        6. Data smoothing
-        7. Add derivatives
-        8. Run PCA
-
-        :param file: complete path name for file to be loaded (string)
-        :param n_syllables: number of syllables to include in preprocessing (scalar)
-        :param n_train: number of training samples (scalar)
-        :param n_test: number of test samples for each syllable (vector of length n_syllables)
-        :param SR: Desired sampling rate
-        :param dsType: Type of interpolation used for downsampling. Can be mean or IIR, which uses an order 8 Chebyshev type 1 filter (default = mean)
-        :param samples: Order of how samples should be included in training/testing data (default = None)
-        :param mel_channels: number of channels to include from the Mel freq spectrum (default = 12)
-        :param winsize: size of the time window used for mfcc extraction (default = 20 ms)
-        :param frames: desired number of time frames in final mfcc data (default = 64)
-        :param invCoeffOrder: if True, extract last n mfcc instead of first n (default = False)
-        :param smoothLength: Number of sampling points to reduce mel transformed data to (default = 5)
-        :param polyOrder: Order of the polynomial to be used for smoothing (default = 3)
-        :param incDer: List of 2 booleans indicating whether to include first and second derivative of mfcc data (default = [True,True])
-        :param nComp: Number of dimensions to reduce data to == number of PCs to use (default = 10)
-        :param usePCA: If True, use PCA to reduze dimensionality of data to nComp (default = False)
-
-        :returns trainDataSmoothend: array of preprocessed training data
-        :returns testDataSmoothend: array of preprocessed test data
-        """
-
-        self.n_train = n_train
-        self.n_test = n_test
-        self.n_syllables = n_syllables
-        self.samples = samples
-
-        """ Load Data """
-
-        syllables = [files for files in os.listdir(self.folder)]
-
-        self.trainDataRaw = []
-        self.testDataRaw = []
-        self.skipped_syllables = []
-
-        if syll_names is not None:
-            # for i,syll in enumerate(syllables):
-            for i, syll in enumerate(syll_names):
-                if np.sum(np.array(syllables) == syll) == 0:
-                    print('Warning: Syllable ', syll, ' not found in folder.')
-                    self.n_syllables -= 1
-                    continue
-
-                # print("DEBUG:", self.samples)
-                if not self.samples:
-                    # print("DEBUG:", self.folder + '/' + syll)
-                    # print("DEBUG:", self.testDataRaw)
-                    print("DEBUG:", self.n_test)
-                    print("DEBUG:", i)
-                    self.trainDataRaw.append(prep.load_data(self.folder + '/' + syll, self.n_train, 0))
-                    self.testDataRaw.append(prep.load_data(self.folder + '/' + syll, self.n_test[i], self.n_train))
-                else:
-                    self.trainDataRaw.append(prep.load_data(self.folder + '/' + syll, self.n_train, 0,
-                                                            sample_order=self.samples[i][0:n_train]))
-                    self.testDataRaw.append(prep.load_data(self.folder + '/' + syll, self.n_test[i], self.n_train,
-                                                           sample_order=self.samples[i][n_train::]))
-                success = True
-        else:
-            stepsize = len(syllables) // n_syllables
-            ind = np.arange(0, stepsize * n_syllables, stepsize)
-
-            for i in range(n_syllables):
-                success = False
-                while not success:
-                    try:
-                        if not self.samples:
-                            self.trainDataRaw.append(
-                                prep.load_data(self.folder + '/' + syllables[ind[i]], self.n_train, 0))
-                            self.testDataRaw.append(
-                                prep.load_data(self.folder + '/' + syllables[ind[i]], self.n_test[i], self.n_train))
-                        else:
-                            self.trainDataRaw.append(
-                                prep.load_data(self.folder + '/' + syllables[ind[i]], self.n_train, 0,
-                                               sample_order=self.samples[i][0:n_train]))
-                            self.testDataRaw.append(
-                                prep.load_data(self.folder + '/' + syllables[ind[i]], self.n_test[i], self.n_train,
-                                               sample_order=self.samples[i][n_train::]))
-                        success = True
-                    except:
-                        self.skipped_syllables.append(syllables[ind[i]])
-                        if i >= (len(ind) - 1): break
-                        if ind[i] < ind[i + 1] and ind[i] < len(syllables):
-                            ind[i] += 1
-                        else:
-                            break
-                        pass
-
-        """ Downsampling """
-
-        self.trainDataDS = prep.downSample(self.trainDataRaw)
-        self.testDataDS = prep.downSample(self.testDataRaw)
-
-        """ MFCC extraction """
-
-        self.trainDataMel = prep.getMEL(self.trainDataDS, mel_channels, invCoeffOrder)
-        self.testDataMel = prep.getMEL(self.testDataDS, mel_channels, invCoeffOrder)
-
-        """ shift and scale both datasets according to properties of training data """
-
-        shifts, scales = prep.getShiftsAndScales(self.trainDataMel)
-
-        trainDataNormalized = prep.normalizeData(self.trainDataMel, shifts, scales)
-        testDataNormalized = prep.normalizeData(self.testDataMel, shifts, scales)
-
-        """ Interpolate datapoints so that each sample has only (smoothLength) timesteps """
-
-        trainDataSmoothend = prep.smoothenData(trainDataNormalized, smoothLength, polyOrder, mel_channels)
-        testDataSmoothend = prep.smoothenData(testDataNormalized, smoothLength, polyOrder, mel_channels)
-
-        """ Include first and second derivatives of mfcc """
-
-        trainDataDer = prep.mfccDerivates(trainDataSmoothend, Der1=incDer[0], Der2=incDer[1])
-        testDataDer = prep.mfccDerivates(testDataSmoothend, Der1=incDer[0], Der2=incDer[1])
-
-        """ PCA """
-        if usePCA:
-            self.trainDataFinal = prep.runPCA(trainDataDer, nComp)
-            self.testDataFinal = prep.runPCA(testDataDer, nComp)
-        else:
-            self.trainDataFinal = trainDataDer
-            self.testDataFinal = testDataDer
 
     def cLearning(self, gamma_pos=25, gamma_neg=27, N=10, SR=1.2, bias_scale=1.0, inp_scale=0.2, conn=1):
         """ Function that learns positive and negative conceptors on data with the following steps:
