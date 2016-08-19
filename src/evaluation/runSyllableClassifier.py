@@ -8,12 +8,15 @@ import sys
 
 import evaluation.crossSylidation as cS
 import syllableClassifier as sC
+import preprocessing
+import random
 
 import numpy as np
 
 np.random.seed(255)
 
 import warnings
+
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 # %%
@@ -21,7 +24,8 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 """ Function """
 
 
-def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF', mfccN=25,
+def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF',
+                 mfccN=25,
                  invCoeffOrder=True, winsize=20, melFramesN=64, smoothL=4, polyOrder=3, incDer=[True, True],
                  nComp=10, usePCA=False, resN=10, specRad=1.2, biasScale=0.2, inpScale=1., conn=1.,
                  gammaPos=25, gammaNeg=27, plotExample=False, scriptsDir=None):
@@ -83,10 +87,30 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         'prepParams': prepParams,
         'clearnParams': clearnParams}
 
-    """ Run classification """
+    performances = []
 
     syllClass = sC.syllableClassifier(path)
-    cvalResults = cS.crossVal(cvalRuns, trainN, syllN, syllClass, gammaPos, gammaNeg, **classParameters)
+    for i in range(cvalRuns):
+
+        samples = []
+        n_test = np.random.random_integers(10, 50, syllN)
+
+        for j in range(syllN):
+            indices = np.arange(0, trainN + n_test[j], 1)
+            ind_tmp = indices.copy().tolist()
+            random.shuffle(ind_tmp)
+            ind_tmp = np.array(ind_tmp)
+
+            samples.append(ind_tmp)
+
+        """ Get and preprocess data """
+
+        train, test = preprocessing.preprocess(path, syllN, trainN, n_test[i], **prepParams)
+        syllClass.cLearning(gammaPos, gammaNeg, **clearnParams)
+        syllClass.cTest()
+        performances.append(syllClass.class_perf)
+
+    cvalResults = np.array(performances)
 
     """ Plotting """
 
@@ -215,19 +239,19 @@ parser = argparse.ArgumentParser(description='Passes arguments on to syllable Cl
 
 parser.add_argument(
     '-path',
-    default='../../data/birddb/syll',
+    default='../data/birddb/syll',
     type=str,
     help='directory to the folder that includes syllable folders with wave data'
 )
 parser.add_argument(
     '-syllN',
     type=int,
-    default=3,
+    default=7,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '-trainN',
-    default=40,
+    default=30,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
