@@ -106,14 +106,12 @@ class RF_Reservoir:
             
         self.W_out = functions.RidgeWout(TrainRs, self.TrainOuts, self.TyA_wout)
         self.NRMSE_readout = functions.NRMSE(np.dot(self.W_out,TrainRs), self.TrainOuts);
-        print(self.NRMSE_readout)
         self.G = functions.RidgeWload(TrainZOld,np.dot(self.G,TrainZOld),TyA_wload)
         
         """ Loading """
         
         self.D = functions.RidgeWload(TrainZOld,self.TrainOuts,self.TyA_wload)
-        self.NRMSE_load =  functions.NRMSE(np.dot(self.D,TrainZOld),self.TrainOuts)
-        print(np.mean(self.NRMSE_load))        
+        self.NRMSE_load =  functions.NRMSE(np.dot(self.D,TrainZOld),self.TrainOuts)     
         
     def recall(self, t_recall = 200):
         
@@ -132,7 +130,4 @@ class RF_Reservoir:
                 if t > self.t_wash: y_recall[t-self.t_wash]= np.dot(self.W_out,r)
                 
             self.Y_recalls.append(y_recall)   
-            
-
-            
             
