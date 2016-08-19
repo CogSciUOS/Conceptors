@@ -6,7 +6,16 @@ import argparse
 import pickle
 import sys
 
-import evaluation.crossSylidation as cS
+"""
+this weird section of code allows modules in the parent directory to be imported here
+it's the only way to do it in a way that allows you to run the file from other directories
+and still have it work properly
+"""
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
+
 import syllableClassifier as sC
 import preprocessing
 import random
@@ -239,7 +248,7 @@ parser = argparse.ArgumentParser(description='Passes arguments on to syllable Cl
 
 parser.add_argument(
     '-path',
-    default='../data/birddb/syll',
+    default='../../data/birddb/syll',
     type=str,
     help='directory to the folder that includes syllable folders with wave data'
 )
