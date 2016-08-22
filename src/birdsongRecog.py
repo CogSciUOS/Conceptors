@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 #%%
 
 # create list of syllables and initialize SongClassifier with it
-syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej']
+syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej','fa','ff','ha','hk']
 SC = SongClassifier(syllables)
 
 # define parameters of songClassifier
@@ -28,8 +28,6 @@ HFCParams = {'sigma': 0.82,
              'dcsv': 4,
              'SigToNoise': float('inf')}
 
-# include plots
-plotLoadedSongs = True
 plotBeliefs = True
 
 #%%
@@ -43,23 +41,8 @@ SC.addSong(s2_length)
 SC.addSong(s3_length)
 SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)
 
-# plot RFC recall
-if plotLoadedSongs:
-    plotrange = 50
-    figure()
-    for s in range(len(SC.Songs)):
-        recall = np.argmax(SC.R.Y_recalls[s][0:plotrange,:], axis = 1)
-        target = np.argmax(SC.patterns[s][0:plotrange,:], axis = 1)
-        subplot(len(SC.Songs),1,s+1)
-        plot(recall, 'r')
-        plot(target, 'b')
-        ylim([0,SC.nSylls - 1])
-        ylabel(' Syllable #')
-        xlabel('t')
-    show()
-
 # run song classification and plot gammas
-SC.run(pattRepRange = (10,20), maxPauseLength = 3, nLayers = 2, useSyllRecog = True, SyllPath = '../data/birddb/syll/',
+SC.run(pattRepRange = (10,20), maxPauseLength = 3, nLayers = 1, useSyllRecog = True, SyllPath = '../data/birddb/syll/',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 if plotBeliefs:
     SC.H.plot_gamma()

@@ -145,12 +145,12 @@ class Hierarchical:
             figure()
             idx = 0
             for p in range(self.n_patts): 
-                plot(xspace ,self.gammaColl[l,p,:].T, label='Gamma of pattern '+str(p))
+                gamma = plot(xspace ,self.gammaColl[l,p,:].T, label='Gamma of pattern '+str(p))
                 realSongFull = np.zeros_like(xspace)
                 realSong = np.sum(self.patterns[p], axis = 1) != 0
                 realSongFull[idx:idx + len(realSong)] = realSong
                 idx += len(realSong)
-                fill_between(xspace, 0, 1, where=realSongFull == 1, facecolor=np.random.rand(3,1), alpha=0.2, label = 'Pattern ' +str(p))
+                fill_between(xspace, 0, 1, where=realSongFull == 1, facecolor=gamma[0].get_color(), alpha=0.2, label = 'Pattern ' +str(p))
             legend()
             suptitle('Gamma lvl' + str(l))
         show()
