@@ -10,7 +10,7 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 #%%
 
 # create list of syllables and initialize SongClassifier with it
-syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej']
+syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej','fa','ff','ha','hk']
 SC = SongClassifier(syllables)
 
 # define parameters of songClassifier
@@ -42,7 +42,7 @@ SC.addSong(s3_length)
 SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (10,20), maxPauseLength = 3, nLayers = 2, useSyllRecog = True, SyllPath = 'D:\Data\Projects\StudyProject\syll',
+SC.run(pattRepRange = (10,20), maxPauseLength = 3, nLayers = 1, useSyllRecog = True, SyllPath = 'D:\Data\Projects\StudyProject\syll',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 if plotBeliefs:
     SC.H.plot_gamma()
