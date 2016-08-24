@@ -98,7 +98,7 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
 
     performances = []
 
-    syllClass = sC.syllableClassifier(path)
+    syllClass = sC.syllableClassifier(**clearnParams)
     for i in range(cvalRuns):
 
         samples = []
@@ -114,7 +114,7 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
 
         """ Get and preprocess data """
 
-        train, test = preprocessing.preprocess(path, syllN, trainN, n_test[i], **prepParams)
+        data = preprocessing.preprocess(path, syllN, trainN, n_test[i], **prepParams)
         syllClass.cLearning(gammaPos, gammaNeg, **clearnParams)
         syllClass.cTest()
         performances.append(syllClass.class_perf)

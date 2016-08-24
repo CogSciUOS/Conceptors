@@ -12,15 +12,20 @@ import random
 # %%
 
 class syllableClassifier:
-    def __init__(self, fname):
-        """ Class that performs supervised learning on syllable data in order to perform classification.
+    __slots__ = (
+        'res',      # reservoir
+        'c_pos',    # positive conceptors
+        'c_neg'     # negative conceptors
+    )
 
-        :param fname: Complete path to folder which includes folders for each syllable which include folders for each sample which include wave data
-        """
 
-        self.folder = fname
+    def __init__(self, neurons, spectral_radius, bias_scale, inp_scale, conn):
+        self.res = c.Reservoir(N=neurons, NetSR=spectral_radius, bias_scale=bias_scale, inp_scale=inp_scale, conn=conn)
+        self.c_pos = []
+        self.c_neg = []
 
-    def cLearning(self, gamma_pos=25, gamma_neg=27, N=10, SR=1.2, bias_scale=1.0, inp_scale=0.2, conn=1):
+
+    def cLearning(self, gamma_pos=25, gamma_neg=27, N=10):
         """ Function that learns positive and negative conceptors on data with the following steps:
         1. create Reservoir
         2. Feed each sample of each syllable in reservoir and collect its states
@@ -30,18 +35,7 @@ class syllableClassifier:
         :param gamma_pos: aperture of the positive conceptors
         :param gamma_neg: aperture of the negative conceptors
         :param data: list of syllables with sample data
-        :param N: size of the reservoir
-        :param SR: spectral radius of the reservoir
-        :param bias_scale: scaling of the bias while running reservoir
-        :param inp_scale: scaling of the input when fed into the reservoir
-        :param conn: scaling of the amount of connectivity within the reservoir
-
-        :returns C_pos: List of positive conceptors
-        :returns C_neg: List of negative conceptors
         """
-
-        self.res = c.Reservoir(N=N, NetSR=SR, bias_scale=bias_scale, inp_scale=0.2, conn=conn)
-        self.C_pos = []
 
         for syllable in np.array(self.trainDataFinal):
 
@@ -54,19 +48,17 @@ class syllableClassifier:
 
             R = np.dot(R_syll, R_syll.T) / self.n_train
             C_tmp = np.dot(R, np.linalg.inv(R + np.eye(len(R))))
-            self.C_pos.append(C_tmp)
+            self.c_pos.append(C_tmp)
 
-        self.C_neg = []
+        for i in range(len(self.c_pos)):
+            C = np.zeros_like(self.c_pos[0])
+            for j in list(range(0, i)) + list(range(i + 1, len(self.c_pos))):
+                C = fct.OR(C, self.c_pos[j])
+            self.c_neg.append(C)
 
-        for i in range(len(self.C_pos)):
-            C = np.zeros_like(self.C_pos[0])
-            for j in list(range(0, i)) + list(range(i + 1, len(self.C_pos))):
-                C = fct.OR(C, self.C_pos[j])
-            self.C_neg.append(C)
-
-        for i in range(len(self.C_pos)):
-            self.C_pos[i] = fct.phi(self.C_pos[i], gamma_pos)
-            self.C_neg[i] = fct.phi(self.C_neg[i], gamma_neg)
+        for i in range(len(self.c_pos)):
+            self.c_pos[i] = fct.phi(self.c_pos[i], gamma_pos)
+            self.c_neg[i] = fct.phi(self.c_neg[i], gamma_neg)
 
     def cTest(self, pattern=None):
         """ Function that uses trained conceptors to recognize syllables in data by going through the following steps:
@@ -104,13 +96,13 @@ class syllableClassifier:
                 states = np.concatenate((np.squeeze(self.res.TrainArgs).T, sample), axis=1)
                 z = np.reshape(states, states.shape[0] * states.shape[1])
 
-                h_pos_tmp = np.zeros(len(self.C_pos))
-                h_neg_tmp = np.zeros(len(self.C_pos))
-                h_comb_tmp = np.zeros(len(self.C_pos))
+                h_pos_tmp = np.zeros(len(self.c_pos))
+                h_neg_tmp = np.zeros(len(self.c_pos))
+                h_comb_tmp = np.zeros(len(self.c_pos))
 
-                for k in range(len(self.C_pos)):
-                    h_pos_tmp[k] = np.dot(np.dot(z.T, self.C_pos[k]), z)
-                    h_neg_tmp[k] = np.dot(np.dot(z.T, self.C_neg[k]), z)
+                for k in range(len(self.c_pos)):
+                    h_pos_tmp[k] = np.dot(np.dot(z.T, self.c_pos[k]), z)
+                    h_neg_tmp[k] = np.dot(np.dot(z.T, self.c_neg[k]), z)
 
                 h_pos_tmp = h_pos_tmp - np.min(h_pos_tmp)
                 h_pos_tmp = h_pos_tmp / np.max(h_pos_tmp)

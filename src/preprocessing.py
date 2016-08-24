@@ -152,7 +152,24 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
         trainDataFinal = trainDataDer
         testDataFinal = testDataDer
 
-    return trainDataFinal, testDataFinal
+    out = {
+        'train_data': trainDataFinal,
+        'test_data': testDataFinal,
+        'train_data_raw': trainDataRaw,
+        'test_data_raw': testDataRaw,
+        'train_data_downsample': trainDataDS,
+        'test_data_downsample': testDataDS,
+        'train_data_mel': trainDataMel,
+        'test_data_mel': testDataMel,
+        'train_data_normalized': trainDataNormalized,
+        'test_data_normalized': testDataNormalized,
+        'train_data_smoothed': trainDataSmoothend,
+        'test_data_smoothed': testDataSmoothend,
+        'train_data_derivatives': trainDataDer,
+        'test_data_derivatives': testDataDer
+    }
+
+    return out
 
 def load_data(syllable, N, used_samples, sample_order = None):
     """Function that goes through all N samples of syllable and loads its wave data.
