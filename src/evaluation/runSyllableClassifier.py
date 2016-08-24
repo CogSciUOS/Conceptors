@@ -10,13 +10,15 @@ import evaluation.crossSylidation as cS
 import syllableClassifier as sC
 
 import numpy as np
+import random
 
+# set random seeds for both numpy and random
 np.random.seed(255)
+random.seed(255)
 
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
-# %%
 
 """ Function """
 
@@ -222,7 +224,7 @@ parser.add_argument(
 parser.add_argument(
     '-syllN',
     type=int,
-    default=3,
+    default=40,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
@@ -358,10 +360,9 @@ parser.add_argument(
     help='Subdirectory in which results are to be stored'
 )
 
-# %%
 
 """ Run script via command window """
-
+# can be also run using an IDE, but uses the default parameters then
 try:
     args = parser.parse_args()
 except:
