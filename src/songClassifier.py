@@ -10,6 +10,7 @@ from rfReservoirConceptor import *
 from hierarchicalConceptor import *
 from syllableClassifier import *
 import itertools
+from functions import checkRecall
 
 #%%
 
@@ -77,11 +78,26 @@ class SongClassifier:
         self.patterns = new_patts
         self.Sylls = list(np.array(self.Sylls)[usedSylls])
         self.nSylls = len(self.Sylls)
-
-        # load patterns into RFC
-        self.R = RF_Reservoir(**RFCParams)
-        self.R.load(self.patterns, t_learn = t_learn, t_cadapt = t_cadapt, t_wash = t_wash, **loadingParams)
-        self.R.recall(t_recall = t_recall)
+        
+        # display syllables and songs in use        
+        print('Final set of syllables used: ', self.Sylls)
+        for i, s in enumerate(self.Songs):
+            print('Song ',i,': ', s)
+        
+        # try loading patterns into RFC until each pattern can be recalled correctly
+        success = False
+        print('Loading songs into RFC...')
+        while not success:
+            self.R = RF_Reservoir(**RFCParams)
+            self.R.load(self.patterns, t_learn = t_learn, t_cadapt = t_cadapt, t_wash = t_wash, **loadingParams)
+            self.R.recall(t_recall = t_recall)
+            recallError = checkRecall(self.patterns, self.R.Y_recalls)
+            print('Mean recall error of each pattern (in range [0, 1]): ', recallError)
+            if np.sum(recallError) == 0:
+                print('Songs succesfully loaded into RFC.')
+                success = True
+            else:
+                print('Loading failed for at least one song. Next try...')
 
     def run(self, patterns = None, nLayers = 3, pattRepRange = (2,20), maxPauseLength = 10, useSyllRecog = False, SyllPath = None,
             nTrain = 30, cType = 2, dataPrepParams = {}, cLearningParams = {}, HFCParams = {}):
@@ -112,6 +128,7 @@ class SongClassifier:
 
         # putt all patterns into syllable recognizer, if syllable recognition is to be done
         if useSyllRecog:
+            print('Running syllable recognition...')
             path = os.path.dirname(os.path.abspath(__file__)) if SyllPath is None else SyllPath
 
             # generate sequence of syllables from patterns to use syllableClassifier on
@@ -148,6 +165,7 @@ class SongClassifier:
                 t_all += t*len(self.Songs[i])
 
         # initialize and run HFC with patterns
+        print('Driving HFC with syllable sequences...')
         self.H = Hierarchical(self.R, nLayers)
         self.H.run(self.patterns, pattTimesteps = pattTimesteps, plotRange = pattTimesteps, **HFCParams)
-
+        print('Done!')

@@ -77,7 +77,6 @@ class syllableClassifier:
                     print('Warning: Syllable ', syll, ' not found in folder.')
                     self.n_syllables -= 1
                     continue
-
                 if not self.samples:
                     self.trainDataRaw.append(prep.load_data(self.folder + '/' + syll, self.n_train, 0))
                     self.testDataRaw.append(prep.load_data(self.folder + '/' + syll, self.n_test[i], self.n_train))
@@ -249,9 +248,9 @@ class syllableClassifier:
                 h_neg_tmp = h_neg_tmp - np.min(h_neg_tmp)
                 h_neg_tmp = 1 - h_neg_tmp / np.max(h_neg_tmp)
                 h_comb_tmp = (h_pos_tmp + h_neg_tmp) / 2.0
-                h_pos.append(h_pos_tmp)
-                h_neg.append(h_neg_tmp)
-                h_comb.append(h_comb_tmp)
+                h_pos.append(h_pos_tmp/np.sum(h_pos_tmp))
+                h_neg.append(h_neg_tmp/np.sum(h_neg_tmp))
+                h_comb.append(h_comb_tmp/np.sum(h_comb_tmp))
 
                 dec_pos = np.where(h_pos_tmp == np.max(h_pos_tmp))[0][0]
                 dec_neg = np.where(h_neg_tmp == np.max(h_neg_tmp))[0][0]
