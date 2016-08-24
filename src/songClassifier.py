@@ -144,7 +144,7 @@ class SongClassifier:
             for s in self.Songs:
                 songs += s
             songs = set(songs)
-            self.SyllClass.prepData(self.nSylls, nTrain, np.ones(len(songs)), syll_names = songs, **dataPrepParams)
+            self.SyllClass.prep_data(self.nSylls, nTrain, np.ones(len(songs)), syll_names = songs, **dataPrepParams)
             self.SyllClass.cLearning(**cLearningParams)
 
             # run classification on syllClassPatts and store the evidences for each syllable in appropriate format for HFC

@@ -10,9 +10,9 @@ class Reservoir:
         :param N: the number of neurons you would like to have in the reservoir
         :param alpha:
         :param NetSR:
-        :param bias_scale:
-        :param inp_scale:
-        :param conn:
+        :param bias_scale: scaling of the bias term to be introduced to each neuron
+        :param inp_scale: the scale for the input values
+        :param conn: downscaling of the reservoir connections
         """
                  
         self.N = N; self.alpha = alpha; self.NetSR = NetSR; 

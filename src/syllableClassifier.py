@@ -10,8 +10,6 @@ import preprocessing as prep
 import random
 
 
-# %%
-
 class syllableClassifier:
     def __init__(self, fname):
         """ Class that performs supervised learning on syllable data in order to perform classification.
@@ -21,9 +19,9 @@ class syllableClassifier:
 
         self.folder = fname
 
-    def prepData(self, n_syllables, n_train, n_test, syll_names=None, samples=None,
-                 SR=20000, dsType='mean', mel_channels=12, invCoeffOrder=False, winsize=20,
-                 frames=64, smoothLength=5, polyOrder=3, incDer=[True, True], nComp=10, usePCA=False):
+    def prep_data(self, n_syllables, n_train, n_test, syll_names=None, samples=None,
+                  sample_rate=20000, ds_type='mean', mel_channels=12, inv_coefforder=False, winsize=20,
+                  frames=64, smooth_length=5, poly_order=3, inc_der=[True, True]):
 
         """ Function that performs the following preprocessing steps on data in file:
         1. loading
@@ -33,24 +31,22 @@ class syllableClassifier:
         5. Data normalization with shift and scale of training data
         6. Data smoothing
         7. Add derivatives
-        8. Run PCA
 
         :param file: complete path name for file to be loaded (string)
         :param n_syllables: number of syllables to include in preprocessing (scalar)
         :param n_train: number of training samples (scalar)
         :param n_test: number of test samples for each syllable (vector of length n_syllables)
-        :param SR: Desired sampling rate
-        :param dsType: Type of interpolation used for downsampling. Can be mean or IIR, which uses an order 8 Chebyshev type 1 filter (default = mean)
+        :param sample_rate: Desired sampling rate for the downsampling
+        :param ds_type: Type of interpolation used for downsampling. Can be mean or IIR, which uses an order 8 Chebyshev type 1 filter (default = mean)
+        :param syll_names the syllable names that should be used if specified
         :param samples: Order of how samples should be included in training/testing data (default = None)
         :param mel_channels: number of channels to include from the Mel freq spectrum (default = 12)
         :param winsize: size of the time window used for mfcc extraction (default = 20 ms)
         :param frames: desired number of time frames in final mfcc data (default = 64)
-        :param invCoeffOrder: if True, extract last n mfcc instead of first n (default = False)
-        :param smoothLength: Number of sampling points to reduce mel transformed data to (default = 5)
-        :param polyOrder: Order of the polynomial to be used for smoothing (default = 3)
-        :param incDer: List of 2 booleans indicating whether to include first and second derivative of mfcc data (default = [True,True])
-        :param nComp: Number of dimensions to reduce data to == number of PCs to use (default = 10)
-        :param usePCA: If True, use PCA to reduze dimensionality of data to nComp (default = False)
+        :param inv_coefforder: if True, extract last n mfcc instead of first n (default = False)
+        :param smooth_length: Number of sampling points to reduce mel transformed data to (default = 5)
+        :param poly_order: Order of the polynomial to be used for smoothing (default = 3)
+        :param inc_der: List of 2 booleans indicating whether to include first and second derivative of mfcc data (default = [True,True])
 
         :returns trainDataSmoothend: array of preprocessed training data
         :returns testDataSmoothend: array of preprocessed test data
@@ -118,13 +114,13 @@ class syllableClassifier:
 
         """ Downsampling """
 
-        self.trainDataDS = prep.downSample(self.trainDataRaw)
-        self.testDataDS = prep.downSample(self.testDataRaw)
+        self.trainDataDS = prep.downSample(self.trainDataRaw, sample_rate, ds_type)
+        self.testDataDS = prep.downSample(self.testDataRaw, sample_rate, ds_type)
 
         """ MFCC extraction """
 
-        self.trainDataMel = prep.getMEL(self.trainDataDS, mel_channels, invCoeffOrder)
-        self.testDataMel = prep.getMEL(self.testDataDS, mel_channels, invCoeffOrder)
+        self.trainDataMel = prep.getMEL(self.trainDataDS, mel_channels, inv_coefforder)
+        self.testDataMel = prep.getMEL(self.testDataDS, mel_channels, inv_coefforder)
 
         """ shift and scale both datasets according to properties of training data """
 
@@ -135,21 +131,17 @@ class syllableClassifier:
 
         """ Interpolate datapoints so that each sample has only (smoothLength) timesteps """
 
-        trainDataSmoothend = prep.smoothenData(trainDataNormalized, smoothLength, polyOrder, mel_channels)
-        testDataSmoothend = prep.smoothenData(testDataNormalized, smoothLength, polyOrder, mel_channels)
+        trainDataSmoothend = prep.smoothenData(trainDataNormalized, smooth_length, poly_order, mel_channels)
+        testDataSmoothend = prep.smoothenData(testDataNormalized, smooth_length, poly_order, mel_channels)
 
         """ Include first and second derivatives of mfcc """
 
-        trainDataDer = prep.mfccDerivates(trainDataSmoothend, Der1=incDer[0], Der2=incDer[1])
-        testDataDer = prep.mfccDerivates(testDataSmoothend, Der1=incDer[0], Der2=incDer[1])
+        trainDataDer = prep.mfccDerivates(trainDataSmoothend, Der1=inc_der[0], Der2=inc_der[1])
+        testDataDer = prep.mfccDerivates(testDataSmoothend, Der1=inc_der[0], Der2=inc_der[1])
 
-        """ PCA """
-        if usePCA:
-            self.trainDataFinal = prep.runPCA(trainDataDer, nComp)
-            self.testDataFinal = prep.runPCA(testDataDer, nComp)
-        else:
-            self.trainDataFinal = trainDataDer
-            self.testDataFinal = testDataDer
+
+        self.trainDataFinal = trainDataDer
+        self.testDataFinal = testDataDer
 
     def cLearning(self, gamma_pos=25, gamma_neg=27, N=10, SR=1.2, bias_scale=1.0, inp_scale=0.2, conn=1):
         """ Function that learns positive and negative conceptors on data with the following steps:
@@ -171,7 +163,7 @@ class syllableClassifier:
         :returns C_neg: List of negative conceptors
         """
 
-        self.res = c.Reservoir(N=N, NetSR=SR, bias_scale=bias_scale, inp_scale=0.2, conn=conn)
+        self.res = c.Reservoir(N=N, NetSR=SR, bias_scale=bias_scale, inp_scale=inp_scale, conn=conn)
         self.C_pos = []
 
         for syllable in np.array(self.trainDataFinal):
@@ -205,9 +197,7 @@ class syllableClassifier:
         2. Analyize similarity of collected states and trained conceptors
         3. Choose syllable, for which similarity is highest
 
-        :param data: list of syllables with sample data (different from training data)
-        :param C_pos: list of trained positive Conceptors
-        :param C_neg: list of trained negative Conceptors
+        :param pattern: the list of syllables that make up the pattern of the song
 
         :returns evidences: list of arrays of evidences with rows = trials and columns = syllables
                             for positive, negative and combined conceptors
