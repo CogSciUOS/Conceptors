@@ -35,12 +35,11 @@ plotBeliefs = True
 #%%
 
 # create random songs and load them into a RFC
-s1_length = 3
-s2_length = 5
-s3_length = 4
-SC.addSong(s1_length)
-SC.addSong(s2_length)
-SC.addSong(s3_length)
+s1 = ['aa', 'ao', 'ba', 'bm', 'ca']
+s2 = ['aa', 'ao', 'ck', 'da', 'dl', 'ea']
+SC.addSong(song = s1)
+SC.addSong(song = s2)
+
 SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)
 
 # plot RFC recall
@@ -59,7 +58,7 @@ if plotLoadedSongs:
     show()
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (10,20), maxPauseLength = 3, nLayers = 2, useSyllRecog = True, SyllPath = '../data/birddb/syll/',
+SC.run(pattRepRange = (10,20), maxPauseLength = 3, nLayers = 2, useSyllRecog = False, SyllPath = '../data/birddb/syll/',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 if plotBeliefs:
     SC.H.plot_gamma()
