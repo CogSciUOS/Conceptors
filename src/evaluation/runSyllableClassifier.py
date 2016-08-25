@@ -64,8 +64,6 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
     :param gammaNeg: Aperture to be used for negative conceptors
     :param plotExample: boolean, if True: Plot raw & smoothed mfcc data as well as (pos, neg, comb) evidences for last run (default = False)
     :param scriptsDir: Directory of all scripts needed for this function
-
-    :returns: cvalResults: Mean classification performance on test data over all runs for positive, negative and combined conceptors (list)
     """
 
     path = os.path.abspath(path)
@@ -137,14 +135,16 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         syllables = [0, 1]
         for syllable_i, syllable in enumerate(syllables):
             subplot(3, len(syllables), syllable_i + 1)
-            utteranceDataRaw = syllClass.trainDataDS[syllable][0][0]
+            # utteranceDataRaw = syllClass.trainDataDS[syllable][0][0]
+            utteranceDataRaw = data['train_data_downsample'][syllable][0][0]
             plot(utteranceDataRaw)
             xlim(0, 9000)
             ylim(-18000, 18000)
             xlabel('t in ms/10')
             ylabel('amplitude')
             subplot(3, len(syllables), syllable_i + 1 + len(syllables))
-            utteranceDataMel = syllClass.trainDataMel[syllable - 1][0]
+            #utteranceDataMel = syllClass.trainDataMel[syllable - 1][0]
+            utteranceDataMel = data['train_data_mel'][syllable - 1][0]
             for channel in range(utteranceDataMel.shape[1]):
                 plot(utteranceDataMel[:, channel])
             xlim(0, 60)
@@ -152,7 +152,7 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
             xlabel('timeframes')
             ylabel('mfcc value')
             subplot(3, len(syllables), syllable_i + 1 + 2 * len(syllables))
-            utteranceData = syllClass.trainDataFinal[syllable - 1][0]
+            utteranceData = data['train_data'][syllable - 1][0]
             for channel in range(utteranceData.shape[1]):
                 plot(utteranceData[:, channel])
             xlim(0, 3)
@@ -164,9 +164,9 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
 
         # syllable evidences
 
-        h_pos = syllClass.evidences[0]
-        h_neg = syllClass.evidences[1]
-        h_comb = syllClass.evidences[2]
+        h_pos = results['evidences'][0]
+        h_neg = results['evidences'][1]
+        h_comb = results['evidences'][2]
 
         evs = figure(figsize=(15, 15))
         suptitle('A', fontsize=20, fontweight='bold', horizontalalignment='left')
@@ -242,8 +242,6 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         fig.savefig('classPerfs.png')
 
         show()
-
-    return cvalResults
 
 
 # %%
