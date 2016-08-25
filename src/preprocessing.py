@@ -17,8 +17,8 @@ import random
 from python_speech_features import mfcc
 
 def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None, samples=None,
-             SR=20000, dsType='mean', mel_channels=12, invCoeffOrder=False, winsize=20,
-             frames=64, smoothLength=5, polyOrder=3, incDer=[True, True], nComp=10, usePCA=False):
+             sample_rate=20000, ds_type='mean', mel_channels=12, inv_coefforder=False, winsize=20,
+             frames=64, smooth_length=5, poly_order=3, inc_der=[True, True]):
 
     """ Function that performs the following preprocessing steps on data in file:
     1. loading
@@ -119,13 +119,13 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
 
     """ Downsampling """
 
-    trainDataDS = downSample(trainDataRaw)
-    testDataDS = downSample(testDataRaw)
+    trainDataDS = downSample(trainDataRaw, sample_rate, ds_type)
+    testDataDS = downSample(testDataRaw, sample_rate, ds_type)
 
     """ MFCC extraction """
 
-    trainDataMel = getMEL(trainDataDS, mel_channels, invCoeffOrder)
-    testDataMel = getMEL(testDataDS, mel_channels, invCoeffOrder)
+    trainDataMel = getMEL(trainDataDS, mel_channels, inv_coefforder)
+    testDataMel = getMEL(testDataDS, mel_channels, inv_coefforder)
 
     """ shift and scale both datasets according to properties of training data """
 
@@ -136,21 +136,16 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
 
     """ Interpolate datapoints so that each sample has only (smoothLength) timesteps """
 
-    trainDataSmoothend = smoothenData(trainDataNormalized, smoothLength, polyOrder, mel_channels)
-    testDataSmoothend = smoothenData(testDataNormalized, smoothLength, polyOrder, mel_channels)
+    trainDataSmoothend = smoothenData(trainDataNormalized, smooth_length, poly_order, mel_channels)
+    testDataSmoothend = smoothenData(testDataNormalized, smooth_length, poly_order, mel_channels)
 
     """ Include first and second derivatives of mfcc """
 
-    trainDataDer = mfccDerivates(trainDataSmoothend, Der1=incDer[0], Der2=incDer[1])
-    testDataDer = mfccDerivates(testDataSmoothend, Der1=incDer[0], Der2=incDer[1])
+    trainDataDer = mfccDerivates(trainDataSmoothend, Der1=inc_der[0], Der2=inc_der[1])
+    testDataDer = mfccDerivates(testDataSmoothend, Der1=inc_der[0], Der2=inc_der[1])
 
-    """ PCA """
-    if usePCA:
-        trainDataFinal = runPCA(trainDataDer, nComp)
-        testDataFinal = runPCA(testDataDer, nComp)
-    else:
-        trainDataFinal = trainDataDer
-        testDataFinal = testDataDer
+    trainDataFinal = trainDataDer
+    testDataFinal = testDataDer
 
     out = {
         'train_data': trainDataFinal,

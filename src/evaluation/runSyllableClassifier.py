@@ -21,14 +21,16 @@ import preprocessing
 import random
 
 import numpy as np
+import random
 
+# set random seeds for both numpy and random
 np.random.seed(255)
+random.seed(255)
 
 import warnings
 
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
-# %%
 
 """ Function """
 
@@ -36,8 +38,7 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF',
                  mfccN=25,
                  invCoeffOrder=True, winsize=20, melFramesN=64, smoothL=4, polyOrder=3, incDer=[True, True],
-                 nComp=10, usePCA=False, resN=10, specRad=1.2, biasScale=0.2, inpScale=1., conn=1.,
-                 gammaPos=25, gammaNeg=27, plotExample=False, scriptsDir=None):
+                 resN=10, specRad=1.2, biasScale=0.2, inpScale=1., conn=1., gammaPos=25, gammaNeg=27, plotExample=False):
     """ Function that runs syllable classification in a supervised manner using positive, negative and combined conceptors.
 
     :param path: Full path to folder that includes subfolders for syllables which include samples of datatype wave (string)
@@ -53,8 +54,6 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
     :param smoothL: Number of timesteps to downsample mfcc data to (scalar)
     :param polyOrder: Order the polynomial to be used for smoothing the mfcc data (default = 3)
     :param incDer: List of 2 booleans, indicates whether to include first and second derivates of mfcc data or not (default = [True,True])
-    :param nComp: Number of principal components to use / dimensions to reduce data to (default = number of coeffs per timestep)
-    :param usePCA: If True, use PCA to reduze dimensionality of mfcc data (default = False)
     :param resN: Size of the reservoir to be used for classification (scalar)
     :param specRad: Desired spectral radius of the connectivity matrix of the reservoir (scalar)
     :param biasScale: Scaling of the bias term to affect each reservoir unit (scalar)
@@ -71,17 +70,15 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
     """ assign parameters """
 
     prepParams = {
-        'SR': sampRate,
-        'dsType': interpolType,
+        'sample_rate': sampRate,
+        'ds_type': interpolType,
         'mel_channels': mfccN,
-        'invCoeffOrder': invCoeffOrder,
+        'inv_coefforder': invCoeffOrder,
         'winsize': winsize,
         'frames': melFramesN,
-        'smoothLength': smoothL,
-        'incDer': incDer,
-        'polyOrder': polyOrder,
-        'nComp': nComp,
-        'usePCA': usePCA}
+        'smooth_length': smoothL,
+        'inc_der': incDer,
+        'poly_order': polyOrder}
 
     clearnParams = {
         'neurons': resN,
@@ -282,9 +279,9 @@ parser.add_argument(
 )
 parser.add_argument(
     '-interpolType',
-    default='IIR',
+    default='mean',
     type=str,
-    help='type of interpolation to be used for downsampling. Can be "mean" or "IIR" which is a 8th order Chebichev filter (default = IIR)'
+    help='type of interpolation to be used for downsampling.'
 )
 parser.add_argument(
     '-mfccN',
@@ -327,18 +324,6 @@ parser.add_argument(
     default=[True, True],
     type=list,
     help='List of 2 booleans indicating whether to include 1./2. derivative of mfcc data or not (default = [True,True])'
-)
-parser.add_argument(
-    '-nComp',
-    default=10,
-    type=int,
-    help='Number of principal components to use / dimensions to reduce data to (default = number of coeffs per timestep)'
-)
-parser.add_argument(
-    '-usePCA',
-    default=False,
-    type=bool,
-    help='If True, use PCA redused training and test data (default = False)'
 )
 parser.add_argument(
     '-resN',
@@ -395,10 +380,9 @@ parser.add_argument(
     help='Subdirectory in which results are to be stored'
 )
 
-# %%
 
 """ Run script via command window """
-
+# can be also run using an IDE, but uses the default parameters then
 try:
     args = parser.parse_args()
 except:
@@ -407,7 +391,7 @@ except:
 
 results = runSyllClass(args.path, args.syllN, args.trainN, args.cvalRuns, args.sampRate, args.interpolType,
                        args.mfccN, args.invCoeffOrder, args.winsize, args.melFramesN, args.smoothL, args.polyOrder,
-                       args.incDer, args.nComp, args.usePCA, args.resN, args.specRad, args.biasScale, args.inpScale,
+                       args.incDer, args.resN, args.specRad, args.biasScale, args.inpScale,
                        args.conn, args.gammaPos, args.gammaNeg, args.plotExample)
 
 output = [results, args]

@@ -9,8 +9,6 @@ import functions as fct
 import random
 
 
-# %%
-
 class syllableClassifier:
     __slots__ = (
         'res',      # reservoir
@@ -38,7 +36,6 @@ class syllableClassifier:
         """
 
         for syllable in np.array(train_data):
-
             R_syll = np.zeros((syllable.shape[1] * (self.size + syllable.shape[2]), syllable.shape[0]))
 
             for i, sample in enumerate(syllable):
@@ -66,9 +63,7 @@ class syllableClassifier:
         2. Analyize similarity of collected states and trained conceptors
         3. Choose syllable, for which similarity is highest
 
-        :param data: list of syllables with sample data (different from training data)
-        :param C_pos: list of trained positive Conceptors
-        :param C_neg: list of trained negative Conceptors
+        :param pattern: the list of syllables that make up the pattern of the song
 
         :returns evidences: list of arrays of evidences with rows = trials and columns = syllables
                             for positive, negative and combined conceptors
@@ -107,9 +102,9 @@ class syllableClassifier:
                 h_neg_tmp = h_neg_tmp - np.min(h_neg_tmp)
                 h_neg_tmp = 1 - h_neg_tmp / np.max(h_neg_tmp)
                 h_comb_tmp = (h_pos_tmp + h_neg_tmp) / 2.0
-                h_pos.append(h_pos_tmp)
-                h_neg.append(h_neg_tmp)
-                h_comb.append(h_comb_tmp)
+                h_pos.append(h_pos_tmp/np.sum(h_pos_tmp))
+                h_neg.append(h_neg_tmp/np.sum(h_neg_tmp))
+                h_comb.append(h_comb_tmp/np.sum(h_comb_tmp))
 
                 dec_pos = np.where(h_pos_tmp == np.max(h_pos_tmp))[0][0]
                 dec_neg = np.where(h_neg_tmp == np.max(h_neg_tmp))[0][0]

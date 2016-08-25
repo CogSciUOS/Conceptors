@@ -3,7 +3,17 @@ import numpy as np
 
 class Reservoir:
     
-    def __init__(self, N = 100, alpha = 10, NetSR = 1.5, bias_scale = 0.2, inp_scale = 1.5, conn = None):
+    def __init__(self, N, alpha = 10, NetSR = 1.5, bias_scale = 0.2, inp_scale = 1.5, conn = None):
+        """
+        Initializes the reservoir with the provided parameters.
+
+        :param N: the number of neurons you would like to have in the reservoir
+        :param alpha:
+        :param NetSR:
+        :param bias_scale: scaling of the bias term to be introduced to each neuron
+        :param inp_scale: the scale for the input values
+        :param conn: downscaling of the reservoir connections
+        """
                  
         self.N = N; self.alpha = alpha; self.NetSR = NetSR; 
         self.bias_scale = bias_scale; self.inp_scale = inp_scale
