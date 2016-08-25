@@ -245,7 +245,7 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
         for sample in syllable:
             SR = np.round(sample[1]/float(sampleRate))
             if dsType == 'mean':
-                pad_size = math.ceil(float(sample[0].size)/SR)*SR - sample[0].size
+                pad_size = int(math.ceil(float(sample[0].size)/SR)*SR - sample[0].size)
                 s_padded = np.append(sample[0], np.zeros(pad_size)*np.NaN)
                 s_new = sp.nanmean(s_padded.reshape(-1,SR), axis=1)
             elif dsType == 'FIR':
