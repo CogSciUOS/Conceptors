@@ -120,7 +120,7 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
 
         """ Get and preprocess data """
 
-        data = preprocessing.preprocess(path, syllN, trainN, n_test[i], **prepParams)
+        data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
         syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
         results = syllClass.cTest(data['test_data'])
         performances.append(results['class_perf'])
@@ -261,7 +261,7 @@ parser.add_argument(
 parser.add_argument(
     '-syllN',
     type=int,
-    default=4,
+    default=10,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
@@ -272,7 +272,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '-cvalRuns',
-    default=10,
+    default=2,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
