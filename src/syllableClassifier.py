@@ -14,18 +14,18 @@ import random
 class syllableClassifier:
     __slots__ = (
         'res',      # reservoir
+        'size',     # reservoir size
         'c_pos',    # positive conceptors
         'c_neg'     # negative conceptors
     )
 
-
     def __init__(self, neurons, spectral_radius, bias_scale, inp_scale, conn):
+        self.size = neurons
         self.res = c.Reservoir(N=neurons, NetSR=spectral_radius, bias_scale=bias_scale, inp_scale=inp_scale, conn=conn)
         self.c_pos = []
         self.c_neg = []
 
-
-    def cLearning(self, gamma_pos=25, gamma_neg=27, N=10):
+    def cLearning(self, n_train, train_data, gamma_pos=25, gamma_neg=27):
         """ Function that learns positive and negative conceptors on data with the following steps:
         1. create Reservoir
         2. Feed each sample of each syllable in reservoir and collect its states
@@ -37,16 +37,16 @@ class syllableClassifier:
         :param data: list of syllables with sample data
         """
 
-        for syllable in np.array(self.trainDataFinal):
+        for syllable in np.array(train_data):
 
-            R_syll = np.zeros((syllable.shape[1] * (N + syllable.shape[2]), syllable.shape[0]))
+            R_syll = np.zeros((syllable.shape[1] * (self.size + syllable.shape[2]), syllable.shape[0]))
 
             for i, sample in enumerate(syllable):
                 self.res.run([sample], t_learn=len(sample), t_wash=0, load=False)
                 states = np.concatenate((np.squeeze(self.res.TrainArgs.T), sample), axis=1)
                 R_syll[:, i] = np.reshape(states, states.shape[0] * states.shape[1])
 
-            R = np.dot(R_syll, R_syll.T) / self.n_train
+            R = np.dot(R_syll, R_syll.T) / n_train
             C_tmp = np.dot(R, np.linalg.inv(R + np.eye(len(R))))
             self.c_pos.append(C_tmp)
 
@@ -60,7 +60,7 @@ class syllableClassifier:
             self.c_pos[i] = fct.phi(self.c_pos[i], gamma_pos)
             self.c_neg[i] = fct.phi(self.c_neg[i], gamma_neg)
 
-    def cTest(self, pattern=None):
+    def cTest(self, test_data, pattern=None):
         """ Function that uses trained conceptors to recognize syllables in data by going through the following steps:
         1. Feed each sample of each syllable into reservoir and collect its states
         2. Analyize similarity of collected states and trained conceptors
@@ -84,11 +84,9 @@ class syllableClassifier:
         class_comb = []
 
         if pattern is not None:
-            self.testData = np.array([self.testDataFinal[np.argmax(syll)] for syll in pattern])
-        else:
-            self.testData = self.testDataFinal
+            test_data = np.array([test_data[np.argmax(syll)] for syll in pattern])
 
-        for syll_i, syllable in enumerate(self.testData):
+        for syll_i, syllable in enumerate(test_data):
 
             for sample in syllable:
 
@@ -132,5 +130,7 @@ class syllableClassifier:
         class_neg = np.array(class_neg)
         class_comb = np.array(class_comb)
 
-        self.evidences = [h_pos, h_neg, h_comb]
-        self.class_perf = [np.mean(class_pos), np.mean(class_neg), np.mean(class_comb)]
+        return {
+            'evidences': [h_pos, h_neg, h_comb],
+            'class_perf': [np.mean(class_pos), np.mean(class_neg), np.mean(class_comb)]
+        }

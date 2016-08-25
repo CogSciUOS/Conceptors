@@ -86,8 +86,8 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         'usePCA': usePCA}
 
     clearnParams = {
-        'N': resN,
-        'SR': specRad,
+        'neurons': resN,
+        'spectral_radius': specRad,
         'bias_scale': biasScale,
         'inp_scale': inpScale,
         'conn': conn}
@@ -98,7 +98,13 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
 
     performances = []
 
-    syllClass = sC.syllableClassifier(**clearnParams)
+    syllClass = sC.syllableClassifier(
+        clearnParams['neurons'],
+        clearnParams['spectral_radius'],
+        clearnParams['bias_scale'],
+        clearnParams['inp_scale'],
+        clearnParams['conn']
+    )
     for i in range(cvalRuns):
 
         samples = []
@@ -115,9 +121,9 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         """ Get and preprocess data """
 
         data = preprocessing.preprocess(path, syllN, trainN, n_test[i], **prepParams)
-        syllClass.cLearning(gammaPos, gammaNeg, **clearnParams)
-        syllClass.cTest()
-        performances.append(syllClass.class_perf)
+        syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
+        results = syllClass.cTest(data['test_data'])
+        performances.append(results['class_perf'])
 
     cvalResults = np.array(performances)
 
@@ -255,7 +261,7 @@ parser.add_argument(
 parser.add_argument(
     '-syllN',
     type=int,
-    default=7,
+    default=4,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
