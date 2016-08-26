@@ -2,7 +2,7 @@
 
 from matplotlib.pyplot import *
 import os
-import argparse
+import configargparse
 import pickle
 import sys
 
@@ -245,7 +245,7 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
 
 """ argument parser """
 
-parser = argparse.ArgumentParser(description='Passes arguments on to syllable Classifier function')
+parser = configargparse.ArgumentParser(description='Passes arguments on to syllable Classifier function')
 
 parser.add_argument(
     '-path',
