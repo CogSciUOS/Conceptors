@@ -34,7 +34,8 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
     :param n_train: number of training samples (scalar)
     :param n_test: number of test samples for each syllable (vector of length n_syllables)
     :param sample_rate: Desired sampling rate
-    :param ds_type: Type of interpolation used for downsampling. Can be mean or IIR, which uses an order 8 Chebyshev type 1 filter (default = mean)
+    :param ds_type: Type of interpolation used for downsampling. Can be mean or IIR, which uses an order 8 Chebyshev
+            type 1 filter (default = mean)
     :param samples: Order of how samples should be included in training/testing data (default = None)
     :param mel_channels: number of channels to include from the Mel freq spectrum (default = 12)
     :param winsize: size of the time window used for mfcc extraction (default = 20 ms)
@@ -42,7 +43,8 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
     :param inv_coefforder: if True, extract last n mfcc instead of first n (default = False)
     :param smooth_length: Number of sampling points to reduce mel transformed data to (default = 5)
     :param poly_order: Order of the polynomial to be used for smoothing (default = 3)
-    :param inc_der: List of 2 booleans indicating whether to include first and second derivative of mfcc data (default = [True,True])
+    :param inc_der: List of 2 booleans indicating whether to include first and second derivative of mfcc data
+            (default = [True,True])
 
     """
 
@@ -270,9 +272,21 @@ def getMEL(data, n_mfcc = 12, invCoeffOrder = False, winsize = 20, frames = 64):
             winstep = (np.round(1 + (len(sample[0]) - W) / (frames - 1))) / float(sample[1])
             i += 1
             if invCoeffOrder:
-                samples.append(mfcc(sample[0], samplerate = sample[1], winlen = winsize/1000., winstep = winstep, numcep = n_mfcc)[:,-n_mfcc::])
+                samples.append(
+                    mfcc(sample[0],
+                         samplerate = sample[1],
+                         winlen = winsize/1000.,
+                         winstep = winstep,
+                         numcep = n_mfcc
+                         )[:,-n_mfcc::])
             else:
-                samples.append(mfcc(sample[0], samplerate = sample[1], winlen = winsize/1000., winstep = winstep, numcep = n_mfcc + 1)[:,1::])
+                samples.append(
+                    mfcc(sample[0],
+                         samplerate = sample[1],
+                         winlen = winsize/1000.,
+                         winstep = winstep,
+                         numcep = n_mfcc + 1
+                         )[:,1::])
         syllables.append(samples)
     return syllables
 
@@ -424,7 +438,8 @@ def mfccDerivates(data, Der1 = True, Der2 = True):
                         if (i+1) < samp.shape[0]:
                             newData[i+1,samp.shape[1]:2*samp.shape[1]] = samp[i+1,:] - samp[i,:]
                         if i > 0:
-                            newData[i,2*samp.shape[1]:3*samp.shape[1]] = newData[i,samp.shape[1]:2*samp.shape[1]] - newData[i-1,samp.shape[1]:2*samp.shape[1]]
+                            newData[i,2*samp.shape[1]:3*samp.shape[1]] = newData[i, samp.shape[1]: 2*samp.shape[1]] - \
+                                                                         newData[i-1,samp.shape[1]: 2*samp.shape[1]]
                 samples.append(newData)
             devdata.append(samples)
     return devdata
