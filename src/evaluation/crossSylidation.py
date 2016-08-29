@@ -52,7 +52,7 @@ def crossVal(cval_runs, n_train, n_syllables, model, gamma_pos, gamma_neg, prepP
     for i in range(cval_runs):
 
         samples = []
-        n_test = np.random.random_integers(10, 50, n_syllables)
+        n_test = r.sample(range(10, 51), n_syllables)
 
         for j in range(n_syllables):
             indices = np.arange(0, n_train + n_test[j], 1)
@@ -69,5 +69,6 @@ def crossVal(cval_runs, n_train, n_syllables, model, gamma_pos, gamma_neg, prepP
         model.cLearning(gamma_pos, gamma_neg, **clearnParams)
         model.cTest()
         performances.append(model.class_perf)
-
+        print(j)
+        print(len(performances))
     return np.array(performances)

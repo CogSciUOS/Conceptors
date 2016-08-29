@@ -223,13 +223,13 @@ parser.add_argument(
 )
 parser.add_argument(
     '-trainN',
-    default=40,
+    default=12,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '-cvalRuns',
-    default=10,
+    default=5,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
