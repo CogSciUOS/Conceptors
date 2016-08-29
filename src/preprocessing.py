@@ -86,7 +86,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
                 )
     else:
         # sample random from the list of available syllables
-        ind = random.sample(range(1, len(syllables)), n_syllables)
+        ind = np.random.choice(range(1, len(syllables)), n_syllables, replace=False)
 
         for i in range(n_syllables):
             success = False
