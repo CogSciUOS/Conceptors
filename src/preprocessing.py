@@ -12,7 +12,159 @@ import math
 import sklearn.decomposition as sd
 import os
 import scipy.io.wavfile as wav
+import random
+
 from python_speech_features import mfcc
+
+def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None, samples=None,
+             sample_rate=20000, ds_type='mean', mel_channels=12, inv_coefforder=False, winsize=20,
+             frames=64, smooth_length=5, poly_order=3, inc_der=[True, True]):
+
+    """ Function that performs the following preprocessing steps on data in file:
+    1. loading
+    2. downsampling
+    3. Extraction of Mel Frequency Cepstral Coefficients
+    4. Extraction of shift and scale of training data
+    5. Data normalization with shift and scale of training data
+    6. Data smoothing
+    7. Add derivatives
+    8. Run PCA
+
+    :param file: complete path name for file to be loaded (string)
+    :param n_syllables: number of syllables to include in preprocessing (scalar)
+    :param n_train: number of training samples (scalar)
+    :param n_test: number of test samples for each syllable (vector of length n_syllables)
+    :param SR: Desired sampling rate
+    :param dsType: Type of interpolation used for downsampling. Can be mean or IIR, which uses an order 8 Chebyshev type 1 filter (default = mean)
+    :param samples: Order of how samples should be included in training/testing data (default = None)
+    :param mel_channels: number of channels to include from the Mel freq spectrum (default = 12)
+    :param winsize: size of the time window used for mfcc extraction (default = 20 ms)
+    :param frames: desired number of time frames in final mfcc data (default = 64)
+    :param invCoeffOrder: if True, extract last n mfcc instead of first n (default = False)
+    :param smoothLength: Number of sampling points to reduce mel transformed data to (default = 5)
+    :param polyOrder: Order of the polynomial to be used for smoothing (default = 3)
+    :param incDer: List of 2 booleans indicating whether to include first and second derivative of mfcc data (default = [True,True])
+    :param nComp: Number of dimensions to reduce data to == number of PCs to use (default = 10)
+    :param usePCA: If True, use PCA to reduze dimensionality of data to nComp (default = False)
+
+    :returns trainDataSmoothend: array of preprocessed training data
+    :returns testDataSmoothend: array of preprocessed test data
+    """
+
+    """ Load Data """
+
+    syllables = [files for files in os.listdir(syllable_directory)]
+    syllables.remove('.gitignore')
+
+    trainDataRaw = []
+    testDataRaw = []
+    skipped_syllables = []
+
+    # if syllable names are provided use those
+    if syll_names is not None:
+        for i, syll in enumerate(syll_names):
+            syll_path = os.path.join(syllable_directory, syll)
+
+            if np.sum(np.array(syllables) == syll) == 0:
+                print('Warning: Syllable ', syll, ' not found in folder.')
+                n_syllables -= 1
+                continue
+
+            if not samples:
+                trainDataRaw.append(
+                    load_data(syll_path, n_train, 0)
+                )
+                testDataRaw.append(
+                    load_data(syll_path, n_test[i], n_train)
+                )
+            else:
+                trainDataRaw.append(
+                    load_data(syll_path, n_train, 0, sample_order=samples[i][0:n_train])
+                )
+                testDataRaw.append(
+                    load_data(syll_path, n_test[i], n_train, sample_order=samples[i][n_train::])
+                )
+    else:
+        # sample random from the list of available syllables
+        ind = random.sample(range(1, len(syllables)), n_syllables)
+
+        for i in range(n_syllables):
+            success = False
+            while not success:
+                try:
+                    syll_path = os.path.join(syllable_directory, syllables[ind[i]])
+                    # try to find a syllable that fullfills the condition of the n_train length
+                    if not samples:
+                        trainDataRaw.append(
+                            load_data(syll_path, n_train, 0)
+                        )
+                        testDataRaw.append(
+                            load_data(syll_path, n_test[i], n_train)
+                        )
+                    else:
+                        trainDataRaw.append(
+                            load_data(syll_path, n_train, 0, sample_order=samples[i][0:n_train])
+                        )
+                        testDataRaw.append(
+                            load_data(syll_path, n_test[i], n_train, sample_order=samples[i][n_train::])
+                        )
+                    success = True
+                except:
+                    skipped_syllables.append(syllables[ind[i]])
+                    if i >= (len(ind) - 1): break
+                    if ind[i] < ind[i + 1] and ind[i] < len(syllables):
+                        ind[i] += 1
+                    else:
+                        break
+
+    """ Downsampling """
+
+    trainDataDS = downSample(trainDataRaw, sample_rate, ds_type)
+    testDataDS = downSample(testDataRaw, sample_rate, ds_type)
+
+    """ MFCC extraction """
+
+    trainDataMel = getMEL(trainDataDS, mel_channels, inv_coefforder)
+    testDataMel = getMEL(testDataDS, mel_channels, inv_coefforder)
+
+    """ shift and scale both datasets according to properties of training data """
+
+    shifts, scales = getShiftsAndScales(trainDataMel)
+
+    trainDataNormalized = normalizeData(trainDataMel, shifts, scales)
+    testDataNormalized = normalizeData(testDataMel, shifts, scales)
+
+    """ Interpolate datapoints so that each sample has only (smoothLength) timesteps """
+
+    trainDataSmoothend = smoothenData(trainDataNormalized, smooth_length, poly_order, mel_channels)
+    testDataSmoothend = smoothenData(testDataNormalized, smooth_length, poly_order, mel_channels)
+
+    """ Include first and second derivatives of mfcc """
+
+    trainDataDer = mfccDerivates(trainDataSmoothend, Der1=inc_der[0], Der2=inc_der[1])
+    testDataDer = mfccDerivates(testDataSmoothend, Der1=inc_der[0], Der2=inc_der[1])
+
+    trainDataFinal = trainDataDer
+    testDataFinal = testDataDer
+
+    out = {
+        'train_data': trainDataFinal,
+        'test_data': testDataFinal,
+        'train_data_raw': trainDataRaw,
+        'test_data_raw': testDataRaw,
+        'train_data_downsample': trainDataDS,
+        'test_data_downsample': testDataDS,
+        'train_data_mel': trainDataMel,
+        'test_data_mel': testDataMel,
+        'train_data_normalized': trainDataNormalized,
+        'test_data_normalized': testDataNormalized,
+        'train_data_smoothed': trainDataSmoothend,
+        'test_data_smoothed': testDataSmoothend,
+        'train_data_derivatives': trainDataDer,
+        'test_data_derivatives': testDataDer
+    }
+
+    return out
 
 def load_data(syllable, N, used_samples, sample_order = None):
     """Function that goes through all N samples of syllable and loads its wave data.
@@ -24,7 +176,7 @@ def load_data(syllable, N, used_samples, sample_order = None):
     
     :returns syllable_waves: list of N sample waves of syllable
     """
-        
+
     samples = [files for files in os.listdir(syllable)]
     syllable_waves = []
     if sample_order is None:
@@ -54,11 +206,11 @@ def zeroPad(data):
 
     max_length = 0
     syllables = []
-    
+
     for syll in data:
         for samp in syll:
             max_length = len(samp[0]) if len(samp[0]) > max_length else max_length
-            
+
     for syllable in data:
         samples = []
         for sample in syllable:
@@ -66,7 +218,7 @@ def zeroPad(data):
             sample_tmp[0:len(sample[0])] = sample[0]
             samples.append([sample_tmp,sample[1]])
         syllables.append(samples)
-        
+
     return syllables
 
 #%%
@@ -81,14 +233,14 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
     
     :returns syllables: downsampled data, in same format as input data
     """
-    
+
     syllables = []
     for syllable in data:
         samples = []
         for sample in syllable:
             SR = np.round(sample[1]/float(sampleRate))
             if dsType == 'mean':
-                pad_size = math.ceil(float(sample[0].size)/SR)*SR - sample[0].size
+                pad_size = int(math.ceil(float(sample[0].size)/SR)*SR - sample[0].size)
                 s_padded = np.append(sample[0], np.zeros(pad_size)*np.NaN)
                 s_new = sp.nanmean(s_padded.reshape(-1,SR), axis=1)
             elif dsType == 'FIR':
@@ -96,12 +248,12 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
             samples.append([s_new, sampleRate])
         syllables.append(samples)
     return syllables
-                
+
 #%%
 
 """ get MEL Frequencies """
 
-def getMEL(data, n_mfcc = 12, invCoeffOrder = False, winsize = 20, frames = 64): 
+def getMEL(data, n_mfcc = 12, invCoeffOrder = False, winsize = 20, frames = 64):
     """ Function that goes through all samples of each syllable and extracts the
         mfccs for the 12 mel frequency channels.
         
@@ -113,7 +265,7 @@ def getMEL(data, n_mfcc = 12, invCoeffOrder = False, winsize = 20, frames = 64):
     
     :returns syllables: list with mfccs for n_mfcc mel channels for each sample of each syllable
     """
-    
+
     syllables = []
     i = 0
     for syllable in data:
@@ -142,7 +294,7 @@ def getShiftsAndScales(data):
 
     if len(data) == 0:
         return 0, 0
-    
+
     allData = []
     for syllable in data:
         for sample in syllable:
@@ -163,7 +315,7 @@ def normalizeData(data, shifts, scales):
     
     :returns newData: list of normalized data
     """
-    
+
     newData = []
     for syllable_i, syllable in enumerate(data):
         newData.append([])
@@ -193,7 +345,7 @@ def smoothenData(data, smoothLength, polyOrder, channelsN):
             newSample = np.zeros((smoothLength, channelsN))
             size = sample.shape[0]
             xVals = np.arange(1, size + 1)
-            interpolCoords = np.linspace(1, size, smoothLength) 
+            interpolCoords = np.linspace(1, size, smoothLength)
             polycoeff = poly.polyfit(list(range(size)), sample, polyOrder)
             sampleSmooth = poly.polyval(list(range(size)), polycoeff)
             for channel_i in range(channelsN):
@@ -202,9 +354,9 @@ def smoothenData(data, smoothLength, polyOrder, channelsN):
             newSyllable.append(newSample)
         newData.append(newSyllable)
     return newData
-    
+
 #%%
-    
+
 def runPCA(data, n):
     """ Function that runs PCA on data and reduces data to first n components.
     
@@ -216,17 +368,17 @@ def runPCA(data, n):
 
     if n > data[0][0].shape[1]:
         raise ValueError('Number of PCs to use exceeds dimensionality of the data')
-        
+
     dataRed = []
-    
-    for i, syll in enumerate(data):     
+
+    for i, syll in enumerate(data):
         train = np.array([])
         for samp in syll:
             if len(train) == 0:
                 train = samp
             else:
                 train = np.concatenate((train,samp), axis = 0)
-                
+
         #R = np.dot(train.T, train)
         #eigvals, eigvecs = np.linalg.eig(R)
         #pcs = eigvecs * eigvals
@@ -244,9 +396,9 @@ def runPCA(data, n):
             dataRed_tmp2[:,j,:] = dataRed_tmp[j*len(syll):(j+1)*len(syll),:]
         dataRed.append(dataRed_tmp2)
     return dataRed
-            
+
 #%%
-            
+
 def mfccDerivates(data, Der1 = True, Der2 = True):
     """ Function that adds subsequent pairwise differences in mfcc data over time and their change over time.
     
@@ -256,7 +408,7 @@ def mfccDerivates(data, Der1 = True, Der2 = True):
     
     :return devdata: MFCC data including derivatives
     """
-    
+
     if not Der1:
         return data
     if Der1:

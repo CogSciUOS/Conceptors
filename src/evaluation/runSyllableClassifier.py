@@ -6,8 +6,19 @@ import argparse
 import pickle
 import sys
 
-import evaluation.crossSylidation as cS
+"""
+this weird section of code allows modules in the parent directory to be imported here
+it's the only way to do it in a way that allows you to run the file from other directories
+and still have it work properly
+"""
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
+
 import syllableClassifier as sC
+import preprocessing
+import random
 
 import numpy as np
 import random
@@ -17,13 +28,15 @@ np.random.seed(255)
 random.seed(255)
 
 import warnings
+
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 
 """ Function """
 
 
-def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF', mfccN=25,
+def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF',
+                 mfccN=25,
                  invCoeffOrder=True, winsize=20, melFramesN=64, smoothL=4, polyOrder=3, incDer=[True, True],
                  resN=10, specRad=1.2, biasScale=0.2, inpScale=1., conn=1., gammaPos=25, gammaNeg=27, plotExample=False):
     """ Function that runs syllable classification in a supervised manner using positive, negative and combined conceptors.
@@ -49,8 +62,7 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
     :param gammaPos: Aperture to be used for positive conceptors
     :param gammaNeg: Aperture to be used for negative conceptors
     :param plotExample: boolean, if True: Plot raw & smoothed mfcc data as well as (pos, neg, comb) evidences for last run (default = False)
-
-    :returns: cvalResults: Mean classification performance on test data over all runs for positive, negative and combined conceptors (list)
+    :param scriptsDir: Directory of all scripts needed for this function
     """
 
     path = os.path.abspath(path)
@@ -69,8 +81,8 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         'poly_order': polyOrder}
 
     clearnParams = {
-        'N': resN,
-        'SR': specRad,
+        'neurons': resN,
+        'spectral_radius': specRad,
         'bias_scale': biasScale,
         'inp_scale': inpScale,
         'conn': conn}
@@ -79,10 +91,36 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         'prepParams': prepParams,
         'clearnParams': clearnParams}
 
-    """ Run classification """
+    performances = []
 
-    syllClass = sC.syllableClassifier(path)
-    cvalResults = cS.crossVal(cvalRuns, trainN, syllN, syllClass, gammaPos, gammaNeg, **classParameters)
+    syllClass = sC.syllableClassifier(
+        clearnParams['neurons'],
+        clearnParams['spectral_radius'],
+        clearnParams['bias_scale'],
+        clearnParams['inp_scale'],
+        clearnParams['conn']
+    )
+    for i in range(cvalRuns):
+
+        samples = []
+        n_test = np.random.random_integers(10, 50, syllN)
+
+        for j in range(syllN):
+            indices = np.arange(0, trainN + n_test[j], 1)
+            ind_tmp = indices.copy().tolist()
+            random.shuffle(ind_tmp)
+            ind_tmp = np.array(ind_tmp)
+
+            samples.append(ind_tmp)
+
+        """ Get and preprocess data """
+
+        data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
+        syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
+        results = syllClass.cTest(data['test_data'])
+        performances.append(results['class_perf'])
+
+    cvalResults = np.array(performances)
 
     """ Plotting """
 
@@ -94,14 +132,16 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         syllables = [0, 1]
         for syllable_i, syllable in enumerate(syllables):
             subplot(3, len(syllables), syllable_i + 1)
-            utteranceDataRaw = syllClass.trainDataDS[syllable][0][0]
+            # utteranceDataRaw = syllClass.trainDataDS[syllable][0][0]
+            utteranceDataRaw = data['train_data_downsample'][syllable][0][0]
             plot(utteranceDataRaw)
             xlim(0, 9000)
             ylim(-18000, 18000)
             xlabel('t in ms/10')
             ylabel('amplitude')
             subplot(3, len(syllables), syllable_i + 1 + len(syllables))
-            utteranceDataMel = syllClass.trainDataMel[syllable - 1][0]
+            #utteranceDataMel = syllClass.trainDataMel[syllable - 1][0]
+            utteranceDataMel = data['train_data_mel'][syllable - 1][0]
             for channel in range(utteranceDataMel.shape[1]):
                 plot(utteranceDataMel[:, channel])
             xlim(0, 60)
@@ -109,7 +149,7 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
             xlabel('timeframes')
             ylabel('mfcc value')
             subplot(3, len(syllables), syllable_i + 1 + 2 * len(syllables))
-            utteranceData = syllClass.trainDataFinal[syllable - 1][0]
+            utteranceData = data['train_data'][syllable - 1][0]
             for channel in range(utteranceData.shape[1]):
                 plot(utteranceData[:, channel])
             xlim(0, 3)
@@ -121,9 +161,9 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
 
         # syllable evidences
 
-        h_pos = syllClass.evidences[0]
-        h_neg = syllClass.evidences[1]
-        h_comb = syllClass.evidences[2]
+        h_pos = results['evidences'][0]
+        h_neg = results['evidences'][1]
+        h_comb = results['evidences'][2]
 
         evs = figure(figsize=(15, 15))
         suptitle('A', fontsize=20, fontweight='bold', horizontalalignment='left')
@@ -199,8 +239,6 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         fig.savefig('classPerfs.png')
 
         show()
-
-    return cvalResults
 
 
 # %%
