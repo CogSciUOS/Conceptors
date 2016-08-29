@@ -54,7 +54,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
     """ Load Data """
 
     syllables = [files for files in os.listdir(syllable_directory)]
-    syllables.remove('.gitignore')
+    #syllables.remove('.gitignore')
 
     trainDataRaw = []
     testDataRaw = []
