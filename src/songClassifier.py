@@ -17,17 +17,19 @@ from functions import checkRecall
 
 class SongClassifier:
 
-    def __init__(self, syllables):
+    def __init__(self, syllables, verbose = True):
         """
         :Description: Initializes SongClassifier with a list of syllables
 
         :Parameters:
             1. syllables:    List including all possible syllables to draw from later on
+            2. verbose:      if False, all print outputs will be supressed
         """
 
         self.Sylls = syllables
         self.nSylls = len(self.Sylls)
         self.Songs = []
+        self.verbose = verbose
 
     def addSong(self, nSongSylls, sequenceReps = 1, song = None):
         """
@@ -93,9 +95,10 @@ class SongClassifier:
         self.nSylls = len(self.Sylls)
         
         # display syllables and songs in use        
-        print('Final set of syllables used: ', self.Sylls)
-        for i, s in enumerate(self.Songs):
-            print('Song ',i,': ', s)
+        if self.verbose: 
+            print('Final set of syllables used: ', self.Sylls)
+            for i, s in enumerate(self.Songs):
+                print('Song ',i,': ', s)
         
         # if syllable recognition is to be used, train syllable recognizer on syllables in songs and drive it with self.patterns
         self.syllableConceptorsLearned = False
@@ -106,17 +109,17 @@ class SongClassifier:
 
         # try loading patterns into RFC until each pattern can be recalled correctly
         success = False
-        print('Loading songs into RFC...')
+        if self.verbose: print('Loading songs into RFC...')
         while not success:
             self.R = RF_Reservoir(**RFCParams)
             self.R.load(patternsRFC, t_learn = t_learn, t_cadapt = t_cadapt, t_wash = t_wash, **loadingParams)
             self.R.recall(t_recall = t_recall)
             recallError = checkRecall(self.patterns, self.R.Y_recalls)
-            print('Mean recall error of each pattern (in range [0, 1]): ', recallError)
+            if self.verbose: print('Mean recall error of each pattern (in range [0, 1]): ', recallError)
             if np.sum(recallError) == 0:
-                print('Songs succesfully loaded into RFC.')
+                if self.verbose: print('Songs succesfully loaded into RFC.')
                 success = True
-            else:
+            elif self.verbose:
                 print('Loading failed for at least one song. Next try...')
     
     def runSyllableClassification(self, SyllPath = None, nTrain = 50, nTest = 10, cType = 2, useStoredPatts = True, 
@@ -141,7 +144,7 @@ class SongClassifier:
             1. newPatts:            List of patterns with recognition evidences for each syllable played
         """
         
-        print('Running syllable recognition...')
+        if self.verbose: print('Running syllable recognition...')
         path = os.path.dirname(os.path.abspath(__file__)) if SyllPath is None else os.path.abspath(SyllPath)
         self.path = path
         
@@ -233,11 +236,11 @@ class SongClassifier:
         # putt all patterns into syllable recognizer, if syllable recognition is to be done
         if useSyllRecog: 
             patternsHFC = self.runSyllableClassification(SyllPath, useStoredPatts = False, useRawOutput = self.syllableConceptorsLearned, maxPauseLength = maxPauseLength, pattTimesteps = pattTimesteps, dataPrepParams = dataPrepParams, cLearningParams = cLearningParams )
-        else:
-            patternsHFC = self.patterns
+        else:      
+            patternsHFC = [p[0:pattTimesteps[i]] for i,p in enumerate(self.patterns)]
             
         # initialize and run HFC with patterns
-        print('Driving HFC with syllable sequences...')
+        if self.verbose: print('Driving HFC with syllable sequences...')
         self.H = Hierarchical(self.R, nLayers)
         self.H.run(patternsHFC, pattTimesteps = pattTimesteps, plotRange = pattTimesteps, **HFCParams)
-        print('Done!')
+        if self.verbose: print('Done!')
