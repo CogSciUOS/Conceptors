@@ -53,6 +53,46 @@ def plot_interpolate_1d(patterns, Y_recalls, overSFac = 20, plotrange = 30):
       
     print(NRMSEsAlign)
 
+def checkRecall(patterns, Y_recalls, evalRange = 50):
+    """
+    :Description: Function that calculates the mean error between a target pattern and a recall from a RFC
+    
+    :Parameters:
+        1. patterns:    list with entries for each target pattern. Each entry should be 2-dimensional
+                        with time on the first dimension and the features on the second dimension
+        2. Y_recalls:   list with same number of entries as patterns, whose dimensionality should match
+                        the entries in patterns as well. Recalls do not have to be of same time length as patterns
+        3. evalRange:   time range over which to evaluate the mean error (default = 50)
+    
+    :Returns:
+        1. meanError:   mean missmatch between patterns and Y_recalls. 0 = no missmatch, 1 = complete missmatch
+    """
+    
+    meanError = np.zeros([len(patterns)])
+    
+    # loop over patterns
+    for i,p in enumerate(patterns):
+        
+        target = np.argmax(p[0:evalRange,:], axis = 1)
+        recall = np.argmax(Y_recalls[i], axis = 1)
+        
+        # calculate phasematch between target and recall for each phaseshift
+        L = len(recall)
+        M = len(target)
+        phasematches = np.zeros([L-M])
+        for s in range(L-M):
+            phasematches[s] = np.linalg.norm(target-recall[s:s+M])
+        
+        # use position of maximal phasematch to calculate mean error
+        pos = np.argmin(phasematches)
+        recall_pm = recall[pos:pos+evalRange]
+        target_pm = target[0:evalRange]
+        
+        meanError[i] = np.mean(recall_pm != target_pm)
+    
+    return meanError
+    
+    
 def IntWeights(N, M,connectivity):    
     
     succ = False

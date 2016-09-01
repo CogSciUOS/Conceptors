@@ -5,7 +5,9 @@ This repository contains all resources for the study project "Controlling non-au
 ## Dependencies
 All project files are written in python 3 and some of the demo files use IPython Notebooks. The dependencies needed for this project can be installed via:
 
-```pip3 install numpy python_speech_features```
+```
+pip3 install numpy python_speech_features
+```
 
 ## Modules
 The source files for running the classification and implementation of Conceptors can be found in the `src` directory, while the files to download birdsongs and syllables reside in the `data` folder.
