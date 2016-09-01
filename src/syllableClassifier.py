@@ -35,6 +35,9 @@ class syllableClassifier:
         :param data: list of syllables with sample data
         """
 
+        self.c_pos = []
+        self.c_neg = []
+
         for syllable in np.array(train_data):
             R_syll = np.zeros((syllable.shape[1] * (self.size + syllable.shape[2]), syllable.shape[0]))
 

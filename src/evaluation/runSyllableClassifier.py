@@ -34,7 +34,8 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF',
                  mfccN=25, invCoeffOrder=True, winsize=20, melFramesN=64, smoothL=4, polyOrder=3, incDer=[True, True],
-                 resN=10, specRad=1.2, biasScale=0.2, inpScale=1., conn=1., gammaPos=25, gammaNeg=27, plotExample=False):
+                 resN=10, specRad=1.2, biasScale=0.2, inpScale=1., conn=1., gammaPos=25, gammaNeg=27, plotExample=False,
+                 syll_names=['as','bl','ck','dm','el']):
     """ Function that runs syllable classification in a supervised manner using positive, negative and combined conceptors.
 
     :param path: Full path to folder that includes subfolders for syllables which include samples of datatype wave (string)
@@ -73,7 +74,8 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         'frames': melFramesN,
         'smooth_length': smoothL,
         'inc_der': incDer,
-        'poly_order': polyOrder}
+        'poly_order': polyOrder,
+        'syll_names': syll_names}
 
     clearnParams = {
         'neurons': resN,
@@ -108,6 +110,7 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
 
         """ Get and preprocess data """
         data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
+        # reinitialize syllable classifier
         syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
         results = syllClass.cTest(data['test_data'])
 
@@ -249,7 +252,7 @@ parser.add_argument(
 parser.add_argument(
     '-syllN',
     type=int,
-    default=10,
+    default=5,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
@@ -260,7 +263,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '-cvalRuns',
-    default=2,
+    default=3,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -371,6 +374,12 @@ parser.add_argument(
     default=None,
     type=str,
     help='Subdirectory in which results are to be stored'
+)
+parser.add_argument(
+    '-syllNames',
+    default=['as','bl','ck','dm','el'],
+    type=list,
+    help='List of names of syllables to be used'
 )
 
 

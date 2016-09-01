@@ -46,6 +46,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
     :param incDer: List of 2 booleans indicating whether to include first and second derivative of mfcc data (default = [True,True])
     :param nComp: Number of dimensions to reduce data to == number of PCs to use (default = 10)
     :param usePCA: If True, use PCA to reduze dimensionality of data to nComp (default = False)
+    :param syll_names: a list of syllable names that should be used
 
     :returns trainDataSmoothend: array of preprocessed training data
     :returns testDataSmoothend: array of preprocessed test data
