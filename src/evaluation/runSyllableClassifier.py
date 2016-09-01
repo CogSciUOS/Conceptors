@@ -74,8 +74,9 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         'frames': melFramesN,
         'smooth_length': smoothL,
         'inc_der': incDer,
-        'poly_order': polyOrder,
-        'syll_names': syll_names}
+        'poly_order': polyOrder
+        #'syll_names': syll_names
+    }
 
     clearnParams = {
         'neurons': resN,
@@ -252,18 +253,18 @@ parser.add_argument(
 parser.add_argument(
     '-syllN',
     type=int,
-    default=5,
+    default=40,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '-trainN',
-    default=15,
+    default=30,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '-cvalRuns',
-    default=3,
+    default=10,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )

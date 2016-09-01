@@ -2,11 +2,9 @@
 Class for the syllable classification
 """
 
-import os.path
 import numpy as np
 import reservoirConceptor as c
 import functions as fct
-import random
 
 
 class syllableClassifier:
