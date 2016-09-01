@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 """ Function """
 
 
-def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='IIF',
+def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, sampRate=20000, interpolType='mean',
                  mfccN=25,
                  invCoeffOrder=True, winsize=20, melFramesN=64, smoothL=4, polyOrder=3, incDer=[True, True],
                  resN=10, specRad=1.2, biasScale=0.2, inpScale=1., conn=1., gammaPos=25, gammaNeg=27, plotExample=False):
@@ -86,10 +86,6 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
         'bias_scale': biasScale,
         'inp_scale': inpScale,
         'conn': conn}
-
-    classParameters = {
-        'prepParams': prepParams,
-        'clearnParams': clearnParams}
 
     performances = []
 
@@ -217,7 +213,7 @@ def runSyllClass(path='../../data/birddb/syll', syllN=5, trainN=30, cvalRuns=1, 
                                   'linewidth': 3})
 
         axes = gca()
-        axes.set_ylim([70, 100])
+        axes.set_ylim([0, 100])
         fig.suptitle('B', fontsize=20, fontweight='bold', horizontalalignment='left')
         ax.set_ylabel('Classification Performance')
         ax.set_xticks(np.arange(perfData.shape[1]) * 2 * width + 1.5 * width)
@@ -261,13 +257,13 @@ parser.add_argument(
 )
 parser.add_argument(
     '-trainN',
-    default=30,
+    default=20,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '-cvalRuns',
-    default=2,
+    default=15,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
