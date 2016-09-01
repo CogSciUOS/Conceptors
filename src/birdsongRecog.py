@@ -45,10 +45,10 @@ s3_length = 4
 SC.addSong(s1_length)
 SC.addSong(s2_length)
 SC.addSong(s3_length)
-SC.loadSongs(useSyllRecog = False, SyllPath = 'D:/Data/Projects/StudyProject/syll', RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams)
+SC.loadSongs(useSyllRecog = False, SyllPath = '../data/birddb/syll/', RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams)
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (5,15), maxPauseLength = 3, nLayers = 1, useSyllRecog = True, SyllPath = 'D:/Data/Projects/StudyProject/syll',
+SC.run(pattRepRange = (5,15), maxPauseLength = 3, nLayers = 1, useSyllRecog = True, SyllPath = '../data/birddb/syll/',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 if plotBeliefs:
     SC.H.plot_gamma()
