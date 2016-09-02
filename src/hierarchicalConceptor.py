@@ -136,32 +136,83 @@ class Hierarchical:
         plot(xspace[2],self.tauColl[:][2,:])
         suptitle('Taus') 
         
-    def plot_gamma(self):
+    def plot_gamma(self, pltMeanGamma = False, songLengths = None):
         
         t_all = np.sum(self.pattTimesteps)
         xspace = np.linspace(0, t_all, t_all)
         
+        if pltMeanGamma:
+            if songLengths is None: raise ValueError('If pltMeanGamma is True, list with song lengths has to be passed to the function')
+            for l in range(self.M):
+                figure()
+                idx = 0
+                gammas = []
+                for p in range(self.n_patts):
+                    gammaSong = np.zeros((self.n_patts, songLengths[p]))
+                    nSongs = int(self.pattTimesteps[p]/songLengths[p])
+                    for s in range(nSongs):
+                        gammaSong += self.gammaColl[l,:,idx:idx+songLengths[p]]
+                        idx += songLengths[p]
+                    gammas.append(gammaSong/nSongs)
+                fullSongLengths = np.sum(songLengths)
+                xspace_tmp = np.arange(0, fullSongLengths)
+                gammaPlt = np.zeros((self.n_patts,fullSongLengths))
+                t = 0                
+                for g in gammas:
+                    gammaPlt[:,t:t+g.shape[1]] = g
+                    t += g.shape[1]
+                fillStart = 0
+                for p in range(self.n_patts):
+                    gamma = plot(xspace_tmp, gammaPlt[p,:], label='Gamma of pattern '+str(p))
+                    fill_between(xspace_tmp, 0, 1, where = (xspace_tmp >= fillStart) * (xspace_tmp < fillStart + songLengths[p]), facecolor = gamma[0].get_color(), alpha = 0.2, label = 'Pattern ' + str(p))
+                    fillStart += songLengths[p]
+                legend()
+                suptitle('Gamma lvl' + str(l))
+            ylim(0,1)
+            show()
+        else:
+            for l in range(self.M):
+                figure()
+                idx = 0
+                for p in range(self.n_patts):
+                    realSongFull = np.zeros_like(xspace)
+                    realSong = np.sum(self.patterns[p], axis = 1) != 0
+                    realSongFull[idx:idx + len(realSong)] = realSong
+                    idx += len(realSong)
+                    gamma = plot(xspace ,self.gammaColl[l,p,:].T, label='Gamma of pattern '+str(p))
+                    fill_between(xspace, 0, 1, where=realSongFull == 1, facecolor=gamma[0].get_color(), alpha=0.2, label = 'Pattern ' +str(p))
+                legend()
+                suptitle('Gamma lvl' + str(l))
+            ylim(0,1)
+            show()
+        
+    
+    def checkPerformance(self):
+        
+        t_all = np.sum(self.pattTimesteps)
+        xspace = np.linspace(0, t_all, t_all)
+        performance = np.zeros((self.M,self.n_patts))
         for l in range(self.M):
-            figure()
             idx = 0
             for p in range(self.n_patts): 
-                gamma = plot(xspace ,self.gammaColl[l,p,:].T, label='Gamma of pattern '+str(p))
+                choice = np.argmax(np.squeeze(self.gammaColl[l,:,:]), axis = 0)
                 realSongFull = np.zeros_like(xspace)
                 realSong = np.sum(self.patterns[p], axis = 1) != 0
                 realSongFull[idx:idx + len(realSong)] = realSong
                 idx += len(realSong)
-                fill_between(xspace, 0, 1, where=realSongFull == 1, facecolor=gamma[0].get_color(), alpha=0.2, label = 'Pattern ' +str(p))
-            legend()
-            suptitle('Gamma lvl' + str(l))
-        show()
+                performance[l,p] = np.mean(choice[realSongFull == 1] == p)
+        
+        return performance
 
         
     def plot_recall(self):
         
         figure() 
         for p in range(self.n_patts):
-            xspace = np.linspace(0,self.plotRange,self.plotRange)
-            plot(xspace,self.cl_inp_colls[p]) 
-            plot(xspace,self.outp_colls[p])
-
+            subplot(self.n_patts,1,p+1)
+            xspace = np.linspace(0,self.plotRange[p],self.plotRange[p])
+            plot(xspace,self.cl_inp_colls[p], 'b') 
+            plot(xspace,self.outp_colls[p], 'r')
+            ylabel('syllable #')
+        xlabel('t in steps')
         show()

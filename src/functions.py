@@ -62,7 +62,7 @@ def checkRecall(patterns, Y_recalls, evalRange = 50):
                         with time on the first dimension and the features on the second dimension
         2. Y_recalls:   list with same number of entries as patterns, whose dimensionality should match
                         the entries in patterns as well. Recalls do not have to be of same time length as patterns
-        3. evalRange:   time range over which to evaluate the mean error (default = 50)
+        3. evalRange:   time range over which to evaluate the mean error. If None, length of Y_recall will be taken for each pattern (default = 50)
     
     :Returns:
         1. meanError:   mean missmatch between patterns and Y_recalls. 0 = no missmatch, 1 = complete missmatch
@@ -73,6 +73,7 @@ def checkRecall(patterns, Y_recalls, evalRange = 50):
     # loop over patterns
     for i,p in enumerate(patterns):
         
+        if evalRange is None: evalRange = len(Y_recalls[i])
         target = np.argmax(p[0:evalRange,:], axis = 1)
         recall = np.argmax(Y_recalls[i], axis = 1)
         
@@ -91,7 +92,6 @@ def checkRecall(patterns, Y_recalls, evalRange = 50):
         meanError[i] = np.mean(recall_pm != target_pm)
     
     return meanError
-    
     
 def IntWeights(N, M,connectivity):    
     
