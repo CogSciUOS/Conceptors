@@ -23,7 +23,7 @@ class syllableClassifier:
         self.c_pos = []
         self.c_neg = []
 
-    def cLearning(self, n_train, train_data, gamma_pos=25, gamma_neg=27):
+    def cLearning(self, n_train, train_data, gamma_pos, gamma_neg):
         """ Function that learns positive and negative conceptors on data with the following steps:
         1. create Reservoir
         2. Feed each sample of each syllable in reservoir and collect its states

@@ -64,18 +64,14 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'inp_scale': inpScale,
         'conn': conn}
 
-    classParameters = {
-        'prepParams': prepParams,
-        'clearnParams': clearnParams}
-
     performances = []
 
     syllClass = sC.syllableClassifier(
-        clearnParams['neurons'],
-        clearnParams['spectral_radius'],
-        clearnParams['bias_scale'],
-        clearnParams['inp_scale'],
-        clearnParams['conn']
+        neurons=clearnParams['neurons'],
+        spectral_radius=clearnParams['spectral_radius'],
+        bias_scale=clearnParams['bias_scale'],
+        inp_scale=clearnParams['inp_scale'],
+        conn=clearnParams['conn']
     )
     for i in range(cvalRuns):
 
@@ -98,7 +94,12 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
                 inv_coefforder=invCoeffOrder, winsize=winsize, frames=melFramesN,
                 smooth_length=smoothL, poly_order=polyOrder, inc_der=incDer
         )
-        syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
+        syllClass.cLearning(
+                n_train=trainN,
+                train_data=data['train_data'],
+                gamma_pos=gammaPos,
+                gamma_neg=gammaNeg
+        )
         results = syllClass.cTest(data['test_data'])
         performances.append(results['class_perf'])
 
@@ -239,7 +240,7 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=10,
+    default=5,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
