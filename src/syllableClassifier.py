@@ -2,11 +2,9 @@
 Class for the syllable classification
 """
 
-import os.path
 import numpy as np
 import reservoirConceptor as c
 import functions as fct
-import random
 
 
 class syllableClassifier:
@@ -47,6 +45,9 @@ class syllableClassifier:
             3. gamma_pos:   aperture of the positive conceptors (default = 25)
             4. gamma_neg:   aperture of the negative conceptors (default = 27)
         """
+
+        self.c_pos = []
+        self.c_neg = []
         
         # loop over syllables
         for syllable in np.array(train_data):
