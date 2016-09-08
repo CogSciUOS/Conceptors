@@ -92,10 +92,12 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
 
         """ Get and preprocess data """
 
-        data = preprocessing.preprocess(syllable_directory=path, n_syllables=syllN, n_train=trainN, n_test=n_test,
-                                        sample_rate=sampRate, ds_type=interpolType,mel_channels=mel
-
-        data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
+        data = preprocessing.preprocess(
+                syllable_directory=path, n_syllables=syllN, n_train=trainN, n_test=n_test,
+                sample_rate=sampRate, ds_type=interpolType, mel_channels=mfccN,
+                inv_coefforder=invCoeffOrder, winsize=winsize, frames=melFramesN,
+                smooth_length=smoothL, poly_order=polyOrder, inc_der=incDer
+        )
         syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
         results = syllClass.cTest(data['test_data'])
         performances.append(results['class_perf'])
