@@ -16,11 +16,11 @@ import random
 
 from python_speech_features import mfcc
 
-def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None, samples=None,
-             sample_rate=20000, ds_type='mean', mel_channels=12, inv_coefforder=False, winsize=20,
-             frames=64, smooth_length=5, poly_order=3, inc_der=[True, True]):
+def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds_type, mel_channels, inv_coefforder,
+               winsize, frames, smooth_length, poly_order, inc_der, syll_names=None, samples=None):
 
-    """ Function that performs the following preprocessing steps on data in file:
+    """
+    Function that performs the following preprocessing steps on data in file:
     1. loading
     2. downsampling
     3. Extraction of Mel Frequency Cepstral Coefficients
@@ -29,23 +29,6 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
     6. Data smoothing
     7. Add derivatives
     8. Run PCA
-
-    :param n_syllables: number of syllables to include in preprocessing (scalar)
-    :param n_train: number of training samples (scalar)
-    :param n_test: number of test samples for each syllable (vector of length n_syllables)
-    :param sample_rate: Desired sampling rate
-    :param ds_type: Type of interpolation used for downsampling. Can be mean or IIR, which uses an order 8 Chebyshev
-            type 1 filter (default = mean)
-    :param samples: Order of how samples should be included in training/testing data (default = None)
-    :param mel_channels: number of channels to include from the Mel freq spectrum (default = 12)
-    :param winsize: size of the time window used for mfcc extraction (default = 20 ms)
-    :param frames: desired number of time frames in final mfcc data (default = 64)
-    :param inv_coefforder: if True, extract last n mfcc instead of first n (default = False)
-    :param smooth_length: Number of sampling points to reduce mel transformed data to (default = 5)
-    :param poly_order: Order of the polynomial to be used for smoothing (default = 3)
-    :param inc_der: List of 2 booleans indicating whether to include first and second derivative of mfcc data
-            (default = [True,True])
-
     """
 
     """ Load Data """
