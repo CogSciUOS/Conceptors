@@ -64,13 +64,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'inp_scale': inpScale,
         'conn': conn}
 
-    syllClass = sC.syllableClassifier(
-        neurons=clearnParams['neurons'],
-        spectral_radius=clearnParams['spectral_radius'],
-        bias_scale=clearnParams['bias_scale'],
-        inp_scale=clearnParams['inp_scale'],
-        conn=clearnParams['conn']
-    )
+    syllClass = sC.syllableClassifier(**clearnParams)
 
     performances = []
     evidences = []
