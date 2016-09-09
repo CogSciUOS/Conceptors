@@ -20,7 +20,17 @@ RFCParams = {'N': 400,
              'bias_scale': 1.2,
              'inp_scale': 1.5}
 loadingParams = {'gradient_c': True}
-dataPrepParams = {}
+dataPrepParams = {
+        'sample_rate': 0,
+        'ds_type': 0,
+        'mel_channels': 0,
+        'inv_coefforder': 0,
+        'winsize': 0,
+        'frames': 0,
+        'smooth_length': 0,
+        'poly_order': 0,
+        'inc_der': 0
+        }
 cLearningParams = {'neurons': 10,
                    'spectral_radius': 1.2,
                    'bias_scale': 0.2,
