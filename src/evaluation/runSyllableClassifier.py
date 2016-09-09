@@ -18,7 +18,6 @@ sys.path.insert(0,parentdir)
 
 import syllableClassifier as sC
 import preprocessing
-import random
 
 import numpy as np
 import random
@@ -28,15 +27,14 @@ np.random.seed(255)
 random.seed(255)
 
 import warnings
-
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 
 """ Function """
 
-
 def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, invCoeffOrder, winsize, melFramesN,
-        smoothL, polyOrder, incDer, resN, specRad, biasScale, inpScale, conn, gammaPos, gammaNeg, plotExample):
+        smoothL, polyOrder, incDer, resN, specRad, biasScale, inpScale, conn, gammaPos, gammaNeg, plotExample,
+        syll_names=['as','bl','ck','dm','el']):
     """
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
@@ -55,7 +53,9 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'frames': melFramesN,
         'smooth_length': smoothL,
         'inc_der': incDer,
-        'poly_order': polyOrder}
+        'poly_order': polyOrder
+        #'syll_names': syll_names
+    }
 
     clearnParams = {
         'neurons': resN,
@@ -64,8 +64,6 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'inp_scale': inpScale,
         'conn': conn}
 
-    performances = []
-
     syllClass = sC.syllableClassifier(
         neurons=clearnParams['neurons'],
         spectral_radius=clearnParams['spectral_radius'],
@@ -73,6 +71,10 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         inp_scale=clearnParams['inp_scale'],
         conn=clearnParams['conn']
     )
+
+    performances = []
+    evidences = []
+
     for i in range(cvalRuns):
 
         samples = []
@@ -87,144 +89,135 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
             samples.append(ind_tmp)
 
         """ Get and preprocess data """
-
-        data = preprocessing.preprocess(
-                syllable_directory=path, n_syllables=syllN, n_train=trainN, n_test=n_test,
-                sample_rate=sampRate, ds_type=interpolType, mel_channels=mfccN,
-                inv_coefforder=invCoeffOrder, winsize=winsize, frames=melFramesN,
-                smooth_length=smoothL, poly_order=polyOrder, inc_der=incDer
-        )
-        syllClass.cLearning(
-                n_train=trainN,
-                train_data=data['train_data'],
-                gamma_pos=gammaPos,
-                gamma_neg=gammaNeg
-        )
+        data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
+        # reinitialize syllable classifier
+        syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
         results = syllClass.cTest(data['test_data'])
+
+        evidences.append(results['evidences'])
         performances.append(results['class_perf'])
 
-    cvalResults = np.array(performances)
+    cval_results = np.array(performances)
 
     """ Plotting """
-
-    # examplary syllable data
-
     if plotExample:
-
-        sylls = figure(figsize=(15, 18))
-        syllables = [0, 1]
-        for syllable_i, syllable in enumerate(syllables):
-            subplot(3, len(syllables), syllable_i + 1)
-            # utteranceDataRaw = syllClass.trainDataDS[syllable][0][0]
-            utteranceDataRaw = data['train_data_downsample'][syllable][0][0]
-            plot(utteranceDataRaw)
-            xlim(0, 9000)
-            ylim(-18000, 18000)
-            xlabel('t in ms/10')
-            ylabel('amplitude')
-            subplot(3, len(syllables), syllable_i + 1 + len(syllables))
-            #utteranceDataMel = syllClass.trainDataMel[syllable - 1][0]
-            utteranceDataMel = data['train_data_mel'][syllable - 1][0]
-            for channel in range(utteranceDataMel.shape[1]):
-                plot(utteranceDataMel[:, channel])
-            xlim(0, 60)
-            ylim(0, 120)
-            xlabel('timeframes')
-            ylabel('mfcc value')
-            subplot(3, len(syllables), syllable_i + 1 + 2 * len(syllables))
-            utteranceData = data['train_data'][syllable - 1][0]
-            for channel in range(utteranceData.shape[1]):
-                plot(utteranceData[:, channel])
-            xlim(0, 3)
-            ylim(0, 1)
-            xlabel('timeframes')
-            ylabel('mfcc value')
-        tight_layout()
-        sylls.savefig('exampleData.png')
-
-        # syllable evidences
-
-        h_pos = results['evidences'][0]
-        h_neg = results['evidences'][1]
-        h_comb = results['evidences'][2]
-
-        evs = figure(figsize=(15, 15))
-        suptitle('A', fontsize=20, fontweight='bold', horizontalalignment='left')
-        subplot(1, 3, 1)
-        imshow(h_pos, origin='lower', extent=[0, h_pos.shape[1], 0, h_pos.shape[0]], aspect='auto',
-               interpolation='none', cmap='Greys')
-        xlabel('syllable #')
-        ylabel('test trial #')
-        title('Pos')
-        subplot(1, 3, 2)
-        imshow(h_neg, origin='lower', extent=[0, h_pos.shape[1], 0, h_pos.shape[0]], aspect='auto',
-               interpolation='none', cmap='Greys')
-        xlabel('syllable #')
-        ylabel('test trial #')
-        title('Neg')
-        subplot(1, 3, 3)
-        imshow(h_comb, origin='lower', extent=[0, h_pos.shape[1], 0, h_pos.shape[0]], aspect='auto',
-               interpolation='none', cmap='Greys')
-        xlabel('syllable #')
-        ylabel('test trial #')
-        title('Comb')
-        colorbar()
-        tight_layout(rect=(0.1, 0.1, 0.9, 0.9))
-        evs.savefig('Evidences.png')
-
-        # classification performances
-
-        perfData = cvalResults * 100.
-        width = 0.35
-        fig, ax = subplots(figsize=(10, 8))
-
-        rects1 = ax.bar(width, np.mean(perfData[:, 0]),
-                        width,
-                        color='MediumSlateBlue',
-                        yerr=np.std(perfData[:, 0]),
-                        error_kw={'ecolor': 'Black',
-                                  'linewidth': 3})
-
-        rects2 = ax.bar(3 * width, np.mean(perfData[:, 1]),
-                        width,
-                        color='Tomato',
-                        yerr=np.std(perfData[:, 1]),
-                        error_kw={'ecolor': 'Black',
-                                  'linewidth': 3})
-
-        rects3 = ax.bar(5 * width, np.mean(perfData[:, 2]),
-                        width,
-                        color='MediumSlateBlue',
-                        yerr=np.std(perfData[:, 2]),
-                        error_kw={'ecolor': 'Black',
-                                  'linewidth': 3})
-
-        axes = gca()
-        axes.set_ylim([70, 100])
-        fig.suptitle('B', fontsize=20, fontweight='bold', horizontalalignment='left')
-        ax.set_ylabel('Classification Performance')
-        ax.set_xticks(np.arange(perfData.shape[1]) * 2 * width + 1.5 * width)
-        ax.set_xticklabels(('Pos', 'Neg', 'Comb'))
-
-        def autolabel(rects):
-            for rect in rects:
-                height = rect.get_height()
-                ax.text(rect.get_x() + rect.get_width() / 2., 0.9 * height,
-                        '%d' % int(height),
-                        ha='center',  # vertical alignment
-                        va='bottom'  # horizontal alignment
-                        )
-
-        autolabel(rects1)
-        autolabel(rects2)
-        autolabel(rects3)
-        tight_layout(rect=(0.1, 0.1, 0.9, 0.9))
-        fig.savefig('classPerfs.png')
-
-        show()
+        plot_results(data, cval_results, evidences, cvalRuns)
 
 
-# %%
+def plot_results(data, cval_results, evidences, cvalRuns):
+
+    sylls = figure(figsize=(15, 18))
+    syllables = [0, 1]
+    for syllable_i, syllable in enumerate(syllables):
+        subplot(3, len(syllables), syllable_i + 1)
+        # utteranceDataRaw = syllClass.trainDataDS[syllable][0][0]
+        utteranceDataRaw = data['train_data_downsample'][syllable][0][0]
+        plot(utteranceDataRaw)
+        xlim(0, 9000)
+        ylim(-18000, 18000)
+        xlabel('t in ms/10')
+        ylabel('amplitude')
+        subplot(3, len(syllables), syllable_i + 1 + len(syllables))
+        # utteranceDataMel = syllClass.trainDataMel[syllable - 1][0]
+        utteranceDataMel = data['train_data_mel'][syllable - 1][0]
+        for channel in range(utteranceDataMel.shape[1]):
+            plot(utteranceDataMel[:, channel])
+        xlim(0, 60)
+        ylim(0, 120)
+        xlabel('timeframes')
+        ylabel('mfcc value')
+        subplot(3, len(syllables), syllable_i + 1 + 2 * len(syllables))
+        utteranceData = data['train_data'][syllable - 1][0]
+        for channel in range(utteranceData.shape[1]):
+            plot(utteranceData[:, channel])
+        xlim(0, 3)
+        ylim(0, 1)
+        xlabel('timeframes')
+        ylabel('mfcc value')
+    tight_layout()
+    sylls.savefig('exampleData.png')
+
+    # syllable evidences
+
+    h_pos = evidences[cvalRuns-1][0]
+    h_neg = evidences[cvalRuns-1][1]
+    h_comb = evidences[cvalRuns-1][2]
+
+    evs = figure(figsize=(15, 15))
+    suptitle('A', fontsize=20, fontweight='bold', horizontalalignment='left')
+    subplot(1, 3, 1)
+    imshow(h_pos, origin='lower', extent=[0, h_pos.shape[1], 0, h_pos.shape[0]], aspect='auto',
+           interpolation='none', cmap='Greys')
+    xlabel('Syllable #')
+    ylabel('Test Trial #')
+    title('Positive')
+    subplot(1, 3, 2)
+    imshow(h_neg, origin='lower', extent=[0, h_pos.shape[1], 0, h_pos.shape[0]], aspect='auto',
+           interpolation='none', cmap='Greys')
+    xlabel('Syllable #')
+    ylabel('Test trial #')
+    title('Negative')
+    subplot(1, 3, 3)
+    imshow(h_comb, origin='lower', extent=[0, h_pos.shape[1], 0, h_pos.shape[0]], aspect='auto',
+           interpolation='none', cmap='Greys')
+    xlabel('Syllable #')
+    ylabel('Test Trial #')
+    title('Combined')
+    colorbar()
+    tight_layout(rect=(0.1, 0.1, 0.9, 0.9))
+    evs.savefig('Evidences.png')
+
+    # classification performances
+
+    perfData = cval_results * 100.
+    width = 0.35
+    fig, ax = subplots(figsize=(10, 8))
+
+    rects1 = ax.bar(width, np.mean(perfData[:, 0]),
+                    width,
+                    color='MediumSlateBlue',
+                    yerr=np.std(perfData[:, 0]),
+                    error_kw={'ecolor': 'Black',
+                              'linewidth': 3})
+
+    rects2 = ax.bar(3 * width, np.mean(perfData[:, 1]),
+                    width,
+                    color='Tomato',
+                    yerr=np.std(perfData[:, 1]),
+                    error_kw={'ecolor': 'Black',
+                              'linewidth': 3})
+
+    rects3 = ax.bar(5 * width, np.mean(perfData[:, 2]),
+                    width,
+                    color='MediumSlateBlue',
+                    yerr=np.std(perfData[:, 2]),
+                    error_kw={'ecolor': 'Black',
+                              'linewidth': 3})
+
+    axes = gca()
+    axes.set_ylim([0, 100])
+    fig.suptitle('B', fontsize=20, fontweight='bold', horizontalalignment='left')
+    ax.set_ylabel('Classification Performance')
+    ax.set_xticks(np.arange(perfData.shape[1]) * 2 * width + 1.5 * width)
+    ax.set_xticklabels(('Positive', 'Negative', 'Combined'))
+
+    def autolabel(rects):
+        for rect in rects:
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width() / 2., 0.9 * height,
+                    '%d' % int(height),
+                    ha='center',  # vertical alignment
+                    va='bottom'  # horizontal alignment
+                    )
+
+    autolabel(rects1)
+    autolabel(rects2)
+    autolabel(rects3)
+    tight_layout(rect=(0.1, 0.1, 0.9, 0.9))
+    fig.savefig('classPerfs.png')
+
+    show()
+
 
 """ argument parser """
 
@@ -360,6 +353,12 @@ parser.add_argument(
     default=None,
     type=str,
     help='Subdirectory in which results are to be stored'
+)
+parser.add_argument(
+    '-syllNames',
+    default=['as','bl','ck','dm','el'],
+    type=list,
+    help='List of names of syllables to be used'
 )
 
 

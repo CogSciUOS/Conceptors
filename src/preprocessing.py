@@ -18,7 +18,6 @@ from python_speech_features import mfcc
 
 def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds_type, mel_channels, inv_coefforder,
                winsize, frames, smooth_length, poly_order, inc_der, syll_names=None, samples=None):
-
     """
     Function that performs the following preprocessing steps on data in file:
     1. loading
@@ -34,7 +33,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
     """ Load Data """
 
     syllables = [files for files in os.listdir(syllable_directory)]
-    syllables.remove('.gitignore')
+    #syllables.remove('.gitignore')
 
     trainDataRaw = []
     testDataRaw = []
@@ -66,7 +65,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                 )
     else:
         # sample random from the list of available syllables
-        ind = random.sample(range(1, len(syllables)), n_syllables)
+        ind = np.random.choice(range(1, len(syllables)), n_syllables, replace=False)
 
         for i in range(n_syllables):
             success = False
