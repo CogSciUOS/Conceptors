@@ -51,4 +51,4 @@ SC.loadSongs(useSyllRecog = False, SyllPath = '../data/birddb/syll/', RFCParams 
 SC.run(pattRepRange = (5,15), maxPauseLength = 3, nLayers = 1, useSyllRecog = False, SyllPath = '../data/birddb/syll/',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
 if plotBeliefs:
-    SC.H.plot_gamma()
+    SC.H.plot_gamma(songLenghts = [len(s) for s in SC.Songs])
