@@ -186,8 +186,16 @@ class Hierarchical:
 
         figure()
         for p in range(self.n_patts):
-            xspace = np.linspace(0,self.plotRange,self.plotRange)
-            plot(xspace,self.cl_inp_colls[p])
-            plot(xspace,self.outp_colls[p])
+            subplot(self.n_patts, 1, p+1)
 
+            # convert categorical data back to syllable id or 0 if no syllable present
+            inp = [cat.argmax()+1 if cat.any() else 0 for cat in self.cl_inp_colls[p]]
+            out = [cat.argmax()+1 if cat.any() else 0 for cat in self.outp_colls[p]]
+
+            xspace = np.arange(self.plotRange[p])
+            plot(xspace, inp, 'g', label = 'Target')
+            plot(xspace, out, 'b', label = 'Output')
+            title('Recall pattern {}'.format(p+1))
+            legend()
+        tight_layout()
         show()
