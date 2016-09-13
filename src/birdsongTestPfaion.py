@@ -50,9 +50,8 @@ SC.loadSongs(useSyllRecog = False, SyllPath = '../data/birddb/syll/', RFCParams 
 # run song classification and plot gammas
 SC.run(pattRepRange = (5,15), maxPauseLength = 3, nLayers = 1, useSyllRecog = False, SyllPath = '../data/birddb/syll/',
        dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
-if plotBeliefs:
-    SC.H.plot_gamma()
-
+#if plotBeliefs:
+#    SC.H.plot_gamma(songLenghts = [len(s) for s in SC.Songs])
 
 
 def f(self, songLenghts = None):
@@ -101,5 +100,3 @@ def f(self, songLenghts = None):
     show()
 
 f(SC.H, songLenghts = [len(s) for s in SC.Songs])
-
-np.sum(SC.H.pattTimesteps[0:4])

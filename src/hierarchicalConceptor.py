@@ -128,6 +128,8 @@ class Hierarchical:
             self.outp_colls.append(copy.copy(outp_coll))
             self.cl_inp_colls.append(copy.copy(cl_inp_coll))
 
+        self.class_predictions = self.gammaColl.argmax(axis = 1)
+
     def plot_tau(self):
 
         figure()
