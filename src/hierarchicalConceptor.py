@@ -216,3 +216,12 @@ class Hierarchical:
             ylabel('syllable #')
         xlabel('t in steps')
         show()
+    
+    def plot_input(self):
+        
+        for p in range(self.n_patts):
+            matshow((self.inp_colls[p]).T, cmap = 'jet', vmin = 0, vmax = 1, interpolation = 'nearest')
+            xlabel('t in steps')
+            ylabel('syllable #')
+            title('Input over time')
+            colorbar()

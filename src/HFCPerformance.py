@@ -49,7 +49,7 @@ maxPauseLength = 1
 
 # independent variables
 SongNumbers = np.arange(2,3)
-NoiseScaling = np.arange(0.5,0.6,0.1)
+SNR = np.arange(2,3)
 
 #%% Run songClassifier with above specified parameters and measure classification performance
 
@@ -58,7 +58,7 @@ meanPerformance = np.zeros((len(SongNumbers), len(NoiseScaling)))
 for i,nSongs in enumerate(SongNumbers):
     
     # loop over different noise scalings
-    for j,noise in enumerate(NoiseScaling):
+    for j,snr in enumerate(SNR):
         
         
         SC = SongClassifier(syllables, verbose = True)
@@ -70,25 +70,25 @@ for i,nSongs in enumerate(SongNumbers):
 
         # load songs into RFC
         SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)
-
-        # add white noise to song patterns
-        patterns = SC.patterns
-        patterns = [p + np.random.randn(p.shape[0], p.shape[1]) * noise for p in patterns]
+        
+        # set noise lvl
+        HFCParams['SigToNoise'] = snr
         
         # run HFC with patterns        
-        SC.run(patterns = patterns, nLayers = 1, pattRepRange = pattRepRange, maxPauseLength = maxPauseLength, HFCParams = HFCParams)
+        SC.run(patterns = SC.patterns, nLayers = 1, pattRepRange = pattRepRange, maxPauseLength = maxPauseLength, HFCParams = HFCParams)
         
         # measure classification error
         performance = SC.H.checkPerformance()
         meanPerformance[i,j] = np.mean(performance[-1,:])
-        #SC.H.plot_gamma(pltMeanGamma = True, songLengths = songLengths)
+        SC.H.plot_input()
         
 #%% plot mean performance over independent variables
 
 matshow(meanPerformance, cmap = 'jet', vmin = 0, vmax = 1, interpolation = 'nearest')
 colorbar()
 title('Mean song classification performance over all patterns')
-xlabel('Noise Scaling')
-xticks(np.arange(0,len(NoiseScaling)), NoiseScaling)
+xlabel('Signal-to-Noise Ratio')
+xticks(np.arange(0,len(SNR)), SNR)
 ylabel('Number of Songs')
 yticks(np.arange(0,len(SongNumbers)), SongNumbers)
+
