@@ -2,11 +2,9 @@
 Class for the syllable classification
 """
 
-import os.path
 import numpy as np
 import reservoirConceptor as c
 import functions as fct
-import random
 
 
 class syllableClassifier:
@@ -33,8 +31,8 @@ class syllableClassifier:
         self.c_pos = []
         self.c_neg = []
 
-    def cLearning(self, n_train, train_data, gamma_pos=25, gamma_neg=27):
-        """ 
+    def cLearning(self, n_train, train_data, gamma_pos, gamma_neg):
+        """ Function that learns positive and negative conceptors on data with the following steps:
         :Description: Function that learns positive and negative conceptors on data with the following steps
             1. create Reservoir
             2. Feed each sample of each syllable in reservoir and collect its states
@@ -47,6 +45,9 @@ class syllableClassifier:
             3. gamma_pos:   aperture of the positive conceptors (default = 25)
             4. gamma_neg:   aperture of the negative conceptors (default = 27)
         """
+
+        self.c_pos = []
+        self.c_neg = []
         
         # loop over syllables
         for syllable in np.array(train_data):
