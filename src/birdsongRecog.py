@@ -21,15 +21,15 @@ RFCParams = {'N': 400,
              'inp_scale': 1.5}
 loadingParams = {'gradient_c': True}
 dataPrepParams = {
-        'sample_rate': 0,
-        'ds_type': 0,
-        'mel_channels': 0,
-        'inv_coefforder': 0,
-        'winsize': 0,
-        'frames': 0,
-        'smooth_length': 0,
-        'poly_order': 0,
-        'inc_der': 0
+        'sample_rate': 20000,
+        'ds_type': 'mean',
+        'mel_channels': 20,
+        'inv_coefforder': True,
+        'winsize': 20,
+        'frames': 64,
+        'smooth_length': 5,
+        'poly_order': 3,
+        'inc_der': [True, True]
         }
 cLearningParams = {'neurons': 10,
                    'spectral_radius': 1.2,
