@@ -16,11 +16,10 @@ import random
 
 from python_speech_features import mfcc
 
-def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None, samples=None,
-             sample_rate=20000, ds_type='mean', mel_channels=12, inv_coefforder=False, winsize=20,
-             frames=64, smooth_length=5, poly_order=3, inc_der=[True, True]):
-
-    """ Function that performs the following preprocessing steps on data in file:
+def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds_type, mel_channels, inv_coefforder,
+               winsize, frames, smooth_length, poly_order, inc_der, syll_names=None, samples=None):
+    """
+    Function that performs the following preprocessing steps on data in file:
     1. loading
     2. downsampling
     3. Extraction of Mel Frequency Cepstral Coefficients
@@ -29,27 +28,6 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, syll_names=None
     6. Data smoothing
     7. Add derivatives
     8. Run PCA
-
-    :param file: complete path name for file to be loaded (string)
-    :param n_syllables: number of syllables to include in preprocessing (scalar)
-    :param n_train: number of training samples (scalar)
-    :param n_test: number of test samples for each syllable (vector of length n_syllables)
-    :param SR: Desired sampling rate
-    :param dsType: Type of interpolation used for downsampling. Can be mean or IIR, which uses an order 8 Chebyshev type 1 filter (default = mean)
-    :param samples: Order of how samples should be included in training/testing data (default = None)
-    :param mel_channels: number of channels to include from the Mel freq spectrum (default = 12)
-    :param winsize: size of the time window used for mfcc extraction (default = 20 ms)
-    :param frames: desired number of time frames in final mfcc data (default = 64)
-    :param invCoeffOrder: if True, extract last n mfcc instead of first n (default = False)
-    :param smoothLength: Number of sampling points to reduce mel transformed data to (default = 5)
-    :param polyOrder: Order of the polynomial to be used for smoothing (default = 3)
-    :param incDer: List of 2 booleans indicating whether to include first and second derivative of mfcc data (default = [True,True])
-    :param nComp: Number of dimensions to reduce data to == number of PCs to use (default = 10)
-    :param usePCA: If True, use PCA to reduze dimensionality of data to nComp (default = False)
-    :param syll_names: a list of syllable names that should be used
-
-    :returns trainDataSmoothend: array of preprocessed training data
-    :returns testDataSmoothend: array of preprocessed test data
     """
 
     """ Load Data """
@@ -276,9 +254,21 @@ def getMEL(data, n_mfcc = 12, invCoeffOrder = False, winsize = 20, frames = 64):
             winstep = (np.round(1 + (len(sample[0]) - W) / (frames - 1))) / float(sample[1])
             i += 1
             if invCoeffOrder:
-                samples.append(mfcc(sample[0], samplerate = sample[1], winlen = winsize/1000., winstep = winstep, numcep = n_mfcc)[:,-n_mfcc::])
+                samples.append(
+                    mfcc(sample[0],
+                         samplerate = sample[1],
+                         winlen = winsize/1000.,
+                         winstep = winstep,
+                         numcep = n_mfcc
+                         )[:,-n_mfcc::])
             else:
-                samples.append(mfcc(sample[0], samplerate = sample[1], winlen = winsize/1000., winstep = winstep, numcep = n_mfcc + 1)[:,1::])
+                samples.append(
+                    mfcc(sample[0],
+                         samplerate = sample[1],
+                         winlen = winsize/1000.,
+                         winstep = winstep,
+                         numcep = n_mfcc + 1
+                         )[:,1::])
         syllables.append(samples)
     return syllables
 
@@ -430,7 +420,8 @@ def mfccDerivates(data, Der1 = True, Der2 = True):
                         if (i+1) < samp.shape[0]:
                             newData[i+1,samp.shape[1]:2*samp.shape[1]] = samp[i+1,:] - samp[i,:]
                         if i > 0:
-                            newData[i,2*samp.shape[1]:3*samp.shape[1]] = newData[i,samp.shape[1]:2*samp.shape[1]] - newData[i-1,samp.shape[1]:2*samp.shape[1]]
+                            newData[i,2*samp.shape[1]:3*samp.shape[1]] = newData[i, samp.shape[1]: 2*samp.shape[1]] - \
+                                                                         newData[i-1,samp.shape[1]: 2*samp.shape[1]]
                 samples.append(newData)
             devdata.append(samples)
     return devdata
