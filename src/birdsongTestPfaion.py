@@ -76,21 +76,16 @@ SC.run(
 #    SC.H.plot_gamma(songLenghts = [len(s) for s in SC.Songs])
 
 
-import matplotlib.gridspec as gridspec
-
 
 
 def f(self, songLenghts = None):
 
     t_all = np.sum(self.pattTimesteps)
     xspace = np.arange(t_all)
-
+    
     # make a figure for every HFC level
     for l in range(self.M):
-        figure()
-        gs = gridspec.GridSpec(2, 1, hspace = 0, height_ratios = [1,6])
 
-        subplot(gs[1])
         # plot gamma and play-area for all patterns
         for p_idx, p in enumerate(self.patterns):
 
@@ -100,40 +95,127 @@ def f(self, songLenghts = None):
 
             # plot gamma values for this song
             gamma_plot = plot(xspace, self.gammaColl[l, p_idx, :].T,
-                label = 'Gamma of pattern {}'.format(p_idx))
+                label = 'Gamma of song {}'.format(p_idx))
 
             # show areas where the song was played
             pattern_not_empty = p.any(axis = 1)
-            fill_between(np.arange(start_idx, end_idx), 0, 1,
+            fill_between(np.arange(start_idx, end_idx), -0.2, 0,
                 where = pattern_not_empty,
                 facecolor = gamma_plot[0].get_color(),
                 alpha = 0.2,
-                label = 'Pattern {}'.format(p_idx))
+                label = 'Song {}'.format(p_idx),
+                linewidth = 0,
+                )
 
             # plot lines after every single song iteration
             if songLenghts:
                 for i in range(start_idx, end_idx):
-                    if i % songLenghts[p_idx] == 0:
-                        axvline(i, color = 'black', alpha = 0.2)
+                    if (i-start_idx) % songLenghts[p_idx] == 0:
+                        axvline(i, ymin=0, ymax=1, color = 'black', alpha = 0.2)
 
-        # plot desriptions
-        xlabel('timesteps')
+            # plot class predictions
+            this_pattern_prediction = self.class_predictions[l] == p_idx
+            fill_between(xspace, 0, 1,
+                where = this_pattern_prediction,
+                facecolor = gamma_plot[0].get_color(),
+                alpha = 0.2,
+                linewidth = 0,
+                )
+            
+            # seperator for target and predictions
+            axhline(0, color = 'black')
+        
+        # dummy plot for label for song border lines
+        plot([], [], color = 'black', alpha = 0.2, label = "Song borders (in target)")
+        
+        # set y axis for gamma levels
+        ylim(-0.2, 1)
+        xlim(0, xspace[-1])
+        yticks(np.linspace(0, 1, 5), np.linspace(0, 1, 5))
         ylabel('Gamma')
-        suptitle('Gamma lvl {}'.format(l))
-
-        # place legend to bottom with dynamic offset depending on number of patterns
-        legend_offset = 0.15 + self.n_patts * 0.05
-        gcf().subplots_adjust(bottom=legend_offset)
+        
+        # make legend (must be here, because the data belongs to standard y-axis)
         legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', borderaxespad=0.0, ncol=2)
-
-
-    subplot(gs[0])
-    gca().matshow(self.class_predictions[l].reshape(1, t_all), aspect='auto')
-    gca().get_xaxis().set_ticks([])
-    gca().get_yaxis().set_ticks([])
-    ylabel('Predicted\nSong', rotation = 'horizontal', ha = 'right', va = 'center')
-
-
+        
+        # switch y axis and set song labels
+        twinx()
+        ylim(-0.2, 1)
+        yticks([-0.1, 0.5], ["Target", "Predicted"])
+        ylabel('Song')
+    
+        # tight layout removes layouting issues with the twinx y-axis
+        tight_layout()
+        
+        # create dynamic offset for the legend depending on number of patterns
+        legend_offset = 0.2 + self.n_patts * 0.05
+        gcf().subplots_adjust(bottom=legend_offset)
+    
+    # show all figures for all hfc levels
     show()
 
 f(SC.H, songLenghts = [len(s) for s in SC.Songs])
+
+
+
+
+# 
+# 
+# import matplotlib.gridspec as gridspec
+# 
+# def f(self, songLenghts = None):
+# 
+#     t_all = np.sum(self.pattTimesteps)
+#     xspace = np.arange(t_all)
+# 
+#     # make a figure for every HFC level
+#     for l in range(self.M):
+#         figure()
+#         gs = gridspec.GridSpec(2, 1, hspace = 0, height_ratios = [1,6])
+# 
+#         subplot(gs[1])
+#         # plot gamma and play-area for all patterns
+#         for p_idx, p in enumerate(self.patterns):
+# 
+#             # calculate start and stop idxs for this song in whole classification
+#             start_idx = np.sum(self.pattTimesteps[0:p_idx], dtype = np.int)
+#             end_idx = np.sum(self.pattTimesteps[0:p_idx + 1], dtype = np.int)
+# 
+#             # plot gamma values for this song
+#             gamma_plot = plot(xspace, self.gammaColl[l, p_idx, :].T,
+#                 label = 'Gamma of pattern {}'.format(p_idx))
+# 
+#             # show areas where the song was played
+#             pattern_not_empty = p.any(axis = 1)
+#             fill_between(np.arange(start_idx, end_idx), 0, 1,
+#                 where = pattern_not_empty,
+#                 facecolor = gamma_plot[0].get_color(),
+#                 alpha = 0.2,
+#                 label = 'Pattern {}'.format(p_idx))
+# 
+#             # plot lines after every single song iteration
+#             if songLenghts:
+#                 for i in range(start_idx, end_idx):
+#                     if i % songLenghts[p_idx] == 0:
+#                         axvline(i, color = 'black', alpha = 0.2)
+# 
+#         # plot desriptions
+#         xlabel('timesteps')
+#         ylabel('Gamma')
+#         suptitle('Gamma lvl {}'.format(l))
+# 
+#         # place legend to bottom with dynamic offset depending on number of patterns
+#         legend_offset = 0.15 + self.n_patts * 0.05
+#         gcf().subplots_adjust(bottom=legend_offset)
+#         legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', borderaxespad=0.0, ncol=2)
+# 
+# 
+#     subplot(gs[0])
+#     gca().matshow(self.class_predictions[l].reshape(1, t_all), aspect='auto')
+#     gca().get_xaxis().set_ticks([])
+#     gca().get_yaxis().set_ticks([])
+#     ylabel('Predicted\nSong', rotation = 'horizontal', ha = 'right', va = 'center')
+# 
+# 
+#     show()
+# 
+# f(SC.H, songLenghts = [len(s) for s in SC.Songs])
