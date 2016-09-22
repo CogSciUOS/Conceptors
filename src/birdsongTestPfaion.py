@@ -54,6 +54,10 @@ SC.run(pattRepRange = (5,15), maxPauseLength = 3, nLayers = 1, useSyllRecog = Fa
 #    SC.H.plot_gamma(songLenghts = [len(s) for s in SC.Songs])
 
 
+import matplotlib.gridspec as gridspec
+
+
+
 def f(self, songLenghts = None):
 
     t_all = np.sum(self.pattTimesteps)
@@ -62,7 +66,9 @@ def f(self, songLenghts = None):
     # make a figure for every HFC level
     for l in range(self.M):
         figure()
+        gs = gridspec.GridSpec(2, 1, hspace = 0, height_ratios = [1,6])
 
+        subplot(gs[1])
         # plot gamma and play-area for all patterns
         for p_idx, p in enumerate(self.patterns):
 
@@ -97,6 +103,15 @@ def f(self, songLenghts = None):
         legend_offset = 0.15 + self.n_patts * 0.05
         gcf().subplots_adjust(bottom=legend_offset)
         legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', borderaxespad=0.0, ncol=2)
+
+
+    subplot(gs[0])
+    gca().matshow(self.class_predictions[l].reshape(1, t_all), aspect='auto')
+    gca().get_xaxis().set_ticks([])
+    gca().get_yaxis().set_ticks([])
+    ylabel('Predicted\nSong', rotation = 'horizontal', ha = 'right', va = 'center')
+
+
     show()
 
 f(SC.H, songLenghts = [len(s) for s in SC.Songs])
