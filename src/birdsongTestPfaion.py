@@ -19,7 +19,17 @@ RFCParams = {'N': 400,
              'bias_scale': 1.2,
              'inp_scale': 1.5}
 loadingParams = {'gradient_c': True}
-dataPrepParams = {}
+dataPrepParams = {
+        'sample_rate': 20000,
+        'ds_type': 'mean',
+        'mel_channels': 20,
+        'inv_coefforder': True,
+        'winsize': 20,
+        'frames': 64,
+        'smooth_length': 5,
+        'poly_order': 3,
+        'inc_der': [True, True]
+        }
 cLearningParams = {'neurons': 10,
                    'spectral_radius': 1.2,
                    'bias_scale': 0.2,
@@ -45,11 +55,23 @@ s3_length = 4
 SC.addSong(s1_length)
 SC.addSong(s2_length)
 SC.addSong(s3_length)
-SC.loadSongs(useSyllRecog = False, SyllPath = '../data/birddb/syll/', RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams)
+SC.loadSongs(
+    useSyllRecog = False,
+    SyllPath = '../data/birddb/syll/',
+    RFCParams = RFCParams,
+    loadingParams = loadingParams,
+    cLearningParams = cLearningParams)
 
 # run song classification and plot gammas
-SC.run(pattRepRange = (5,15), maxPauseLength = 3, nLayers = 1, useSyllRecog = False, SyllPath = '../data/birddb/syll/',
-       dataPrepParams = dataPrepParams, cLearningParams = cLearningParams, HFCParams = HFCParams)
+SC.run(
+    pattRepRange = (5,15),
+    maxPauseLength = 3,
+    nLayers = 1,
+    useSyllRecog = False,
+    SyllPath = '../data/birddb/syll/',
+    dataPrepParams = dataPrepParams,
+    cLearningParams = cLearningParams,
+    HFCParams = HFCParams)
 #if plotBeliefs:
 #    SC.H.plot_gamma(songLenghts = [len(s) for s in SC.Songs])
 
