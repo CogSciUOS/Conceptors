@@ -163,8 +163,8 @@ def load_data(syllable, N, used_samples, noise, sample_order = None):
         for i in range(int(N)):
             rate, wave = wav.read(syllable + '/' + samples[i + used_samples])
 
-            if noise > 0:
-                wave_noise = np.random.normal(0,noise,len(wave))
+            if random.random() < noise: #should noise be added?
+                wave_noise = np.random.normal(0,np.std(wave),len(wave))
                 wave = wave + wave_noise
 
             syllable_waves.append([wave,rate])
@@ -173,8 +173,8 @@ def load_data(syllable, N, used_samples, noise, sample_order = None):
             rate, wave = wav.read(syllable + '/' + samples[i])
             if wave.size == 0: print(i, samples[i])
 
-            if noise > 0:
-                wave_noise = np.random.normal(0,noise,len(wave))
+            if random.random() < noise:  # should noise be added?
+                wave_noise = np.random.normal(0,np.std(wave),len(wave))
                 wave = wave + wave_noise
 
             syllable_waves.append([wave,rate])

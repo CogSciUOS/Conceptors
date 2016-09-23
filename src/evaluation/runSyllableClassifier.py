@@ -229,18 +229,18 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=5,
+    default=4,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '--trainN',
-    default=30,
+    default=6,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=2,
+    default=4,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -298,11 +298,16 @@ parser.add_argument(
     help='List of 2 booleans indicating whether to include 1./2. derivative of mfcc data or not (default = [True,True])'
 )
 parser.add_argument(
-        '--data_noise',
-        default=0,
-        type=float,
-        # TODO: figure out the exact parameters of this noise
-        help='How much noise to inject into the syllable sound waves'
+    '--data_noise',
+    default=0.1,
+    type=float,
+    help='The proportion of samples that should be disturbed by noise'
+)
+parser.add_argument(
+    '--noise_strength',
+    default=3,
+    type=float,
+    help='The variance of the noise that one wants to add'
 )
 parser.add_argument(
     '--resN',
