@@ -17,7 +17,7 @@ import random
 from python_speech_features import mfcc
 
 def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds_type, mel_channels, inv_coefforder,
-               winsize, frames, smooth_length, poly_order, inc_der, syll_names=None, samples=None):
+               winsize, frames, smooth_length, poly_order, inc_der, noise, syll_names=None, samples=None):
     """
     Function that performs the following preprocessing steps on data in file:
     1. loading
@@ -32,6 +32,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     """ Load Data """
 
+    print(noise)
     syllables = [files for files in os.listdir(syllable_directory)]
     #syllables.remove('.gitignore')
 
@@ -51,17 +52,17 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
             if not samples:
                 trainDataRaw.append(
-                    load_data(syll_path, n_train, 0)
+                    load_data(syll_path, n_train, 0, noise=noise)
                 )
                 testDataRaw.append(
-                    load_data(syll_path, n_test[i], n_train)
+                    load_data(syll_path, n_test[i], n_train, noise=noise)
                 )
             else:
                 trainDataRaw.append(
-                    load_data(syll_path, n_train, 0, sample_order=samples[i][0:n_train])
+                    load_data(syll_path, n_train, 0, noise=noise, sample_order=samples[i][0:n_train])
                 )
                 testDataRaw.append(
-                    load_data(syll_path, n_test[i], n_train, sample_order=samples[i][n_train::])
+                    load_data(syll_path, n_test[i], n_train, noise=noise, sample_order=samples[i][n_train::])
                 )
     else:
         # sample random from the list of available syllables
@@ -75,17 +76,17 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                     # try to find a syllable that fullfills the condition of the n_train length
                     if not samples:
                         trainDataRaw.append(
-                            load_data(syll_path, n_train, 0)
+                            load_data(syll_path, n_train, 0, noise=noise)
                         )
                         testDataRaw.append(
-                            load_data(syll_path, n_test[i], n_train)
+                            load_data(syll_path, n_test[i], n_train, noise=noise)
                         )
                     else:
                         trainDataRaw.append(
-                            load_data(syll_path, n_train, 0, sample_order=samples[i][0:n_train])
+                            load_data(syll_path, n_train, 0, noise=noise, sample_order=samples[i][0:n_train])
                         )
                         testDataRaw.append(
-                            load_data(syll_path, n_test[i], n_train, sample_order=samples[i][n_train::])
+                            load_data(syll_path, n_test[i], n_train, noise=noise, sample_order=samples[i][n_train::])
                         )
                     success = True
                 except:
@@ -145,7 +146,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     return out
 
-def load_data(syllable, N, used_samples, sample_order = None):
+def load_data(syllable, N, used_samples, noise, sample_order = None):
     """Function that goes through all N samples of syllable and loads its wave data.
     
     :param syllable: complete path name of syllable (string)
@@ -161,11 +162,21 @@ def load_data(syllable, N, used_samples, sample_order = None):
     if sample_order is None:
         for i in range(int(N)):
             rate, wave = wav.read(syllable + '/' + samples[i + used_samples])
+
+            if noise > 0:
+                wave_noise = np.random.normal(0,noise,len(wave))
+                wave = wave + wave_noise
+
             syllable_waves.append([wave,rate])
     else:
         for i in sample_order:
             rate, wave = wav.read(syllable + '/' + samples[i])
             if wave.size == 0: print(i, samples[i])
+
+            if noise > 0:
+                wave_noise = np.random.normal(0,noise,len(wave))
+                wave = wave + wave_noise
+
             syllable_waves.append([wave,rate])
     return syllable_waves
 
@@ -213,6 +224,7 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
     :returns syllables: downsampled data, in same format as input data
     """
 
+    print(data)
     syllables = []
     for syllable in data:
         samples = []
@@ -235,13 +247,13 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
 def getMEL(data, n_mfcc = 12, invCoeffOrder = False, winsize = 20, frames = 64):
     """ Function that goes through all samples of each syllable and extracts the
         mfccs for the 12 mel frequency channels.
-        
+
     :param data: list of syllables with sample data
     :param n_mfcc: number of mel frequency cepstral coefficients to return (default = 12)
     :param invCoeffOrder: if True, extract last n mfcc instead of first n (default = False)
     :param wisize: size of the time window used for mfcc extraction
     :param frames: desired number of time frames in final mfcc data
-    
+
     :returns syllables: list with mfccs for n_mfcc mel channels for each sample of each syllable
     """
 

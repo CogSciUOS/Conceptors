@@ -34,7 +34,7 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 
 def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, invCoeffOrder, winsize, melFramesN,
         smoothL, polyOrder, incDer, resN, specRad, biasScale, inpScale, conn, gammaPos, gammaNeg, plotExample,
-        syll_names=['as','bl','ck','dm','el']):
+        noise, syll_names=['as','bl','ck','dm','el']):
     """
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
@@ -53,7 +53,8 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'frames': melFramesN,
         'smooth_length': smoothL,
         'inc_der': incDer,
-        'poly_order': polyOrder
+        'poly_order': polyOrder,
+        'noise': noise
         #'syll_names': syll_names
     }
 
@@ -91,6 +92,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         evidences.append(results['evidences'])
         performances.append(results['class_perf'])
 
+    print(data['train_data_downsample'])
     cval_results = np.array(performances)
 
     """ Plotting """
@@ -296,6 +298,13 @@ parser.add_argument(
     help='List of 2 booleans indicating whether to include 1./2. derivative of mfcc data or not (default = [True,True])'
 )
 parser.add_argument(
+        '--data_noise',
+        default=0,
+        type=float,
+        # TODO: figure out the exact parameters of this noise
+        help='How much noise to inject into the syllable sound waves'
+)
+parser.add_argument(
     '--resN',
     default=10,
     type=int,
@@ -369,7 +378,8 @@ runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args
              invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
              smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
              specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-             gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample
+             gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
+             noise=args.data_noise
              )
 
 # output = [results, args]
