@@ -128,6 +128,8 @@ class Hierarchical:
             self.outp_colls.append(copy.copy(outp_coll))
             self.cl_inp_colls.append(copy.copy(cl_inp_coll))
 
+        self.class_predictions = self.gammaColl.argmax(axis = 1)
+
     def plot_tau(self):
 
         figure()
@@ -160,7 +162,6 @@ class Hierarchical:
 
         # make a figure for every HFC level
         for l in range(self.M):
-            figure()
 
             # plot gamma and play-area for all patterns
             for p_idx, p in enumerate(self.patterns):
@@ -171,31 +172,62 @@ class Hierarchical:
 
                 # plot gamma values for this song
                 gamma_plot = plot(xspace, self.gammaColl[l, p_idx, :].T,
-                    label = 'Gamma of pattern {}'.format(p_idx))
+                    label = 'Gamma of song {}'.format(p_idx))
 
                 # show areas where the song was played
                 pattern_not_empty = p.any(axis = 1)
-                fill_between(np.arange(start_idx, end_idx), 0, 1,
+                fill_between(np.arange(start_idx, end_idx), -0.2, 0,
                     where = pattern_not_empty,
                     facecolor = gamma_plot[0].get_color(),
                     alpha = 0.2,
-                    label = 'Pattern {}'.format(p_idx))
+                    label = 'Song {}'.format(p_idx),
+                    linewidth = 0,
+                    )
 
                 # plot lines after every single song iteration
                 if songLenghts:
                     for i in range(start_idx, end_idx):
-                        if i % songLenghts[p_idx] == 0:
-                            axvline(i, color = 'black', alpha = 0.2)
+                        if (i-start_idx) % songLenghts[p_idx] == 0:
+                            axvline(i, ymin=0, ymax=1, color = 'black', alpha = 0.2)
 
-            # plot desriptions
-            xlabel('timesteps')
+                # plot class predictions
+                this_pattern_prediction = self.class_predictions[l] == p_idx
+                fill_between(xspace, 0, 1,
+                    where = this_pattern_prediction,
+                    facecolor = gamma_plot[0].get_color(),
+                    alpha = 0.2,
+                    linewidth = 0,
+                    )
+
+                # seperator for target and predictions
+                axhline(0, color = 'black')
+
+            # dummy plot for label for song border lines
+            plot([], [], color = 'black', alpha = 0.2, label = "Song borders (in target)")
+
+            # set y axis for gamma levels
+            ylim(-0.2, 1)
+            xlim(0, xspace[-1])
+            yticks(np.linspace(0, 1, 5), np.linspace(0, 1, 5))
             ylabel('Gamma')
-            suptitle('Gamma lvl {}'.format(l))
 
-            # place legend to bottom with dynamic offset depending on number of patterns
-            legend_offset = 0.15 + self.n_patts * 0.05
-            gcf().subplots_adjust(bottom=legend_offset)
+            # make legend (must be here, because the data belongs to standard y-axis)
             legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', borderaxespad=0.0, ncol=2)
+
+            # switch y axis and set song labels
+            twinx()
+            ylim(-0.2, 1)
+            yticks([-0.1, 0.5], ["Target", "Predicted"])
+            ylabel('Song')
+
+            # tight layout removes layouting issues with the twinx y-axis
+            tight_layout()
+
+            # create dynamic offset for the legend depending on number of patterns
+            legend_offset = 0.2 + self.n_patts * 0.05
+            gcf().subplots_adjust(bottom=legend_offset)
+
+        # show all figures for all hfc levels
         show()
 
     def plot_recall(self):
