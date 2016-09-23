@@ -44,7 +44,7 @@ syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej','fa','ff','ha','h
 # song length and repetition and pauses
 minSongLength = 3
 maxSongLength = 6
-pattRepRange = (5,15)
+nTestSongs = 100
 maxPauseLength = 1
 
 # independent variables
@@ -56,6 +56,8 @@ SNR = np.arange(2,3)
 meanPerformance = np.zeros((len(SongNumbers), len(NoiseScaling)))
 # loop over different number of songs
 for i,nSongs in enumerate(SongNumbers):
+    
+    meanSongLength = nTestTrials/nSongs    
     
     # loop over different noise scalings
     for j,snr in enumerate(SNR):
@@ -75,7 +77,7 @@ for i,nSongs in enumerate(SongNumbers):
         HFCParams['SigToNoise'] = snr
         
         # run HFC with patterns        
-        SC.run(patterns = SC.patterns, nLayers = 1, pattRepRange = pattRepRange, maxPauseLength = maxPauseLength, HFCParams = HFCParams)
+        SC.run(patterns = SC.patterns, nLayers = 1, pattRepRange = [meanSongLength, meanSongLength+1], maxPauseLength = maxPauseLength, HFCParams = HFCParams)
         
         # measure classification error
         performance = SC.H.checkPerformance()
