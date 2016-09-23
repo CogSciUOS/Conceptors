@@ -229,18 +229,18 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=4,
+    default=10,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '--trainN',
-    default=6,
+    default=40,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=4,
+    default=3,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -299,15 +299,9 @@ parser.add_argument(
 )
 parser.add_argument(
     '--data_noise',
-    default=0.1,
+    default=0.001,
     type=float,
     help='The proportion of samples that should be disturbed by noise'
-)
-parser.add_argument(
-    '--noise_strength',
-    default=3,
-    type=float,
-    help='The variance of the noise that one wants to add'
 )
 parser.add_argument(
     '--resN',

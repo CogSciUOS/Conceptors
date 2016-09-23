@@ -66,7 +66,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                 )
     else:
         # sample random from the list of available syllables
-        ind = np.random.choice(range(1, len(syllables)), n_syllables, replace=False)
+        ind = sorted(np.random.choice(range(0, len(syllables)), n_syllables, replace=False))
 
         for i in range(n_syllables):
             success = False
@@ -171,7 +171,6 @@ def load_data(syllable, N, used_samples, noise, sample_order = None):
     else:
         for i in sample_order:
             rate, wave = wav.read(syllable + '/' + samples[i])
-            if wave.size == 0: print(i, samples[i])
 
             if random.random() < noise:  # should noise be added?
                 wave_noise = np.random.normal(0,np.std(wave),len(wave))
