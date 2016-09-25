@@ -41,34 +41,39 @@ HFCParams = {'sigma': 0.82,
 # list of syllables to initialize songClassifier with
 syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej','fa','ff','ha','hk']
 
-# song length and repetition and pauses
-minSongLength = 3
-maxSongLength = 6
+# list of songs to train RFC on
+songs = [['aa','bm','ck'],
+         ['ao','da','ao','ej'],
+         ['ba','ck','ck','dl','ao'],
+         ['da','ff','ff'],
+         ['ba','ba','fa','fa'],
+         ['dl','ha','dl','ha','bm']]
+         
+# size of test data set and length of pauses added 
 nTestSongs = 100
 maxPauseLength = 1
 
 # independent variables
-SongNumbers = np.arange(2,3)
-SNR = np.arange(2,3)
+SongNumbers = np.arange(6,7)
+SNR = np.array([2])#,1,0.5,0.25])
 
 #%% Run songClassifier with above specified parameters and measure classification performance
 
-meanPerformance = np.zeros((len(SongNumbers), len(NoiseScaling)))
+meanPerformance = np.zeros((len(SongNumbers), len(SNR)))
+k = 1
 # loop over different number of songs
 for i,nSongs in enumerate(SongNumbers):
     
-    meanSongLength = nTestTrials/nSongs    
+    meanSongLength = nTestSongs/nSongs    
     
     # loop over different noise scalings
     for j,snr in enumerate(SNR):
         
-        
         SC = SongClassifier(syllables, verbose = True)
 
         # create random songs of random length from syllable list
-        songLengths = np.random.randint(minSongLength, high = maxSongLength, size = nSongs)
         for n in range(nSongs):
-            SC.addSong(songLengths[n])
+            SC.addSong(len(songs[n]), song = songs[n])
 
         # load songs into RFC
         SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)
@@ -82,7 +87,9 @@ for i,nSongs in enumerate(SongNumbers):
         # measure classification error
         performance = SC.H.checkPerformance()
         meanPerformance[i,j] = np.mean(performance[-1,:])
-        SC.H.plot_input()
+        #SC.H.plot_input()
+        print(k,'. of ',len(SongNumbers)*len(SNR),' runs finished.')
+        k += 1
         
 #%% plot mean performance over independent variables
 

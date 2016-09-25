@@ -74,6 +74,8 @@ class Hierarchical:
                     cl_inp = np.reshape(p(t), self.RFC.n_ip_dim)
 
                 inp    = cl_inp + noiseLVL*np.random.randn(self.RFC.n_ip_dim)
+                inp    = inp - min(inp)
+                inp    = inp / max(inp)
 
                 for l in range(self.M):
 
@@ -221,7 +223,7 @@ class Hierarchical:
             ylabel('Song')
 
             # tight layout removes layouting issues with the twinx y-axis
-            tight_layout()
+            #tight_layout()
 
             # create dynamic offset for the legend depending on number of patterns
             legend_offset = 0.2 + self.n_patts * 0.05
