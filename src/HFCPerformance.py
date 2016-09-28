@@ -33,7 +33,7 @@ cLearningParams = {'neurons': 10,
                    'gammaNeg': 27}
                    
 HFCParams = {'sigma': 0.82,
-             'drift': 0.01,
+             'drift': 0.,
              'gammaRate': 0.005,
              'dcsv': 4,
              'SigToNoise': float('inf')}
@@ -47,15 +47,16 @@ songs = [['aa','bm','ck'],
          ['ba','ck','ck','dl','ao'],
          ['da','ff','ff'],
          ['ba','ba','fa','fa'],
-         ['dl','ha','dl','ha','bm']]
+         ['dl','ha','dl','ha','bm'],
+         ['hk','aa','da','hk']]
          
 # size of test data set and length of pauses added 
 nTestSongs = 100
 maxPauseLength = 1
 
 # independent variables
-SongNumbers = np.arange(6,7)
-SNR = np.array([2])#,1,0.5,0.25])
+SongNumbers = np.arange(2,8)
+SNR = np.array([4,2,1,0.5,0.25,0.125])
 
 #%% Run songClassifier with above specified parameters and measure classification performance
 
@@ -64,19 +65,22 @@ k = 1
 # loop over different number of songs
 for i,nSongs in enumerate(SongNumbers):
     
-    meanSongLength = nTestSongs/nSongs    
+    meanSongLength = nTestSongs/nSongs
+
+    SC = SongClassifier(syllables, verbose = True)
+    
+    idx = np.arange(0,nSongs)
+    np.random.shuffle(idx)
+
+    # create random songs of random length from syllable list
+    for n in range(nSongs):
+        SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
+
+    # load songs into RFC
+    SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)    
     
     # loop over different noise scalings
     for j,snr in enumerate(SNR):
-        
-        SC = SongClassifier(syllables, verbose = True)
-
-        # create random songs of random length from syllable list
-        for n in range(nSongs):
-            SC.addSong(len(songs[n]), song = songs[n])
-
-        # load songs into RFC
-        SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)
         
         # set noise lvl
         HFCParams['SigToNoise'] = snr
