@@ -8,6 +8,7 @@ import numpy.polynomial.polynomial as poly
 import scipy as sp
 import scipy.interpolate
 import scipy.signal as ss
+import scipy.stats as stat
 import math
 import sklearn.decomposition as sd
 import os
@@ -31,8 +32,6 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
     """
 
     """ Load Data """
-
-    print(noise)
     syllables = [files for files in os.listdir(syllable_directory)]
     #syllables.remove('.gitignore')
 
@@ -52,14 +51,14 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
             if not samples:
                 trainDataRaw.append(
-                    load_data(syll_path, n_train, 0, noise=noise)
+                    load_data(syll_path, n_train, 0, noise=0)
                 )
                 testDataRaw.append(
                     load_data(syll_path, n_test[i], n_train, noise=noise)
                 )
             else:
                 trainDataRaw.append(
-                    load_data(syll_path, n_train, 0, noise=noise, sample_order=samples[i][0:n_train])
+                    load_data(syll_path, n_train, 0, noise=0, sample_order=samples[i][0:n_train])
                 )
                 testDataRaw.append(
                     load_data(syll_path, n_test[i], n_train, noise=noise, sample_order=samples[i][n_train::])
@@ -76,14 +75,14 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                     # try to find a syllable that fullfills the condition of the n_train length
                     if not samples:
                         trainDataRaw.append(
-                            load_data(syll_path, n_train, 0, noise=noise)
+                            load_data(syll_path, n_train, 0, 0)
                         )
                         testDataRaw.append(
                             load_data(syll_path, n_test[i], n_train, noise=noise)
                         )
                     else:
                         trainDataRaw.append(
-                            load_data(syll_path, n_train, 0, noise=noise, sample_order=samples[i][0:n_train])
+                            load_data(syll_path, n_train, 0, 0, sample_order=samples[i][0:n_train])
                         )
                         testDataRaw.append(
                             load_data(syll_path, n_test[i], n_train, noise=noise, sample_order=samples[i][n_train::])
@@ -164,7 +163,7 @@ def load_data(syllable, N, used_samples, noise, sample_order = None):
             rate, wave = wav.read(syllable + '/' + samples[i + used_samples])
 
             if random.random() < noise: #should noise be added?
-                wave_noise = np.random.normal(0,np.std(wave),len(wave))
+                wave_noise = sp.sqrt(scipy.var(wave)/stat.signaltonoise(wave))
                 wave = wave + wave_noise
 
             syllable_waves.append([wave,rate])
@@ -173,7 +172,7 @@ def load_data(syllable, N, used_samples, noise, sample_order = None):
             rate, wave = wav.read(syllable + '/' + samples[i])
 
             if random.random() < noise:  # should noise be added?
-                wave_noise = np.random.normal(0,np.std(wave),len(wave))
+                wave_noise = sp.sqrt(scipy.var(wave)/stat.signaltonoise(wave))
                 wave = wave + wave_noise
 
             syllable_waves.append([wave,rate])
@@ -223,7 +222,6 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
     :returns syllables: downsampled data, in same format as input data
     """
 
-    print(data)
     syllables = []
     for syllable in data:
         samples = []
@@ -381,13 +379,6 @@ def runPCA(data, n):
             else:
                 train = np.concatenate((train,samp), axis = 0)
 
-        #R = np.dot(train.T, train)
-        #eigvals, eigvecs = np.linalg.eig(R)
-        #pcs = eigvecs * eigvals
-        #ind = np.squeeze(np.fliplr(np.array(np.argsort(eigvals), ndmin = 2)))
-        #print(ind)
-        #print(eigvals)
-        #comps = np.squeeze(pcs[:,ind])
         model = sd.PCA(n_components = n)
         results = model.fit(train)
         comps = results.components_.T

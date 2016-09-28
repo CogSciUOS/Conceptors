@@ -28,6 +28,7 @@ random.seed(255)
 
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
+warnings.filterwarnings("ignore", category=np.ComplexWarning)
 
 
 """ Function """
@@ -65,12 +66,12 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'inp_scale': inpScale,
         'conn': conn}
 
-    syllClass = sC.syllableClassifier(**clearnParams)
-
     performances = []
     evidences = []
 
     for i in range(cvalRuns):
+
+        syllClass = sC.syllableClassifier(**clearnParams)
 
         samples = []
         n_test = np.random.random_integers(10, 50, syllN)
@@ -92,12 +93,14 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         evidences.append(results['evidences'])
         performances.append(results['class_perf'])
 
-    print(data['train_data_downsample'])
+    #print(data['train_data_downsample'])
     cval_results = np.array(performances)
 
     """ Plotting """
-    if plotExample:
-        plot_results(data, cval_results, evidences, cvalRuns)
+    #if plotExample:
+    #    plot_results(data, cval_results, evidences, cvalRuns)
+
+    return cval_results * 100. #returns the results of the conceptors in percentage
 
 
 def plot_results(data, cval_results, evidences, cvalRuns):
@@ -234,13 +237,13 @@ parser.add_argument(
 )
 parser.add_argument(
     '--trainN',
-    default=40,
+    default=30,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=3,
+    default=10,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -299,7 +302,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--data_noise',
-    default=0.001,
+    default=0.92,
     type=float,
     help='The proportion of samples that should be disturbed by noise'
 )
@@ -368,18 +371,20 @@ parser.add_argument(
 # can be also run using an IDE, but uses the default parameters then
 try:
     args = parser.parse_args()
-    print(args)
 except:
     sys.exit(0)
 
-runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
-             sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
-             invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
-             smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
-             specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-             gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
-             noise=args.data_noise
-             )
+
+for noise in np.arange(0,1,0.1):
+    cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
+                sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
+                invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
+                smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
+                specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
+                gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
+                noise=args.data_noise
+                )
+    print(np.mean(cval_perc,axis=0))
 
 # output = [results, args]
 #
