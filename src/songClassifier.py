@@ -6,6 +6,7 @@ Created on Wed Jun 15 17:28:51 2016
 """
 
 import os.path
+import numpy as np
 from rfReservoirConceptor import *
 from hierarchicalConceptor import *
 from syllableClassifier import *
@@ -52,7 +53,7 @@ class SongClassifier:
             self.Songs.append(song)
         else:
             # generate random sequence of syllables
-            songSylls = [self.Sylls[i] for i in np.random.choice(range(len(self.Sylls)), nSongSylls, replace=False)]
+            songSylls = [self.Sylls[i] for i in np.random.choice(range(self.nSylls), nSongSylls, replace=False)]
 
             # append random sequences of nSongSylls syllables drawn from songSylls and append them to song list
             self.Songs.append(list(itertools.chain.from_iterable([[songSylls[i] for i in np.random.choice(range(len(songSylls)), nSongSylls, replace = True)] for j in range(sequenceReps)])))
@@ -122,7 +123,7 @@ class SongClassifier:
             elif self.verbose:
                 print('Loading failed for at least one song. Next try...')
     
-    def runSyllableClassification(self, SyllPath = None, nTrain = 50, nTest = 10, cType = 2, useStoredPatts = True, 
+    def runSyllableClassification(self, SyllPath = None, nTrain = 50, nTest = 20, cType = 2, useStoredPatts = True, 
                                   useRawOutput = True, pattTimesteps = None, maxPauseLength = 3, dataPrepParams = {}, cLearningParams = {}):
         """
         :Description: Function that learns conceptors for each syllable in self.Songs and
@@ -163,6 +164,8 @@ class SongClassifier:
                 syllClassPatts = np.append(syllClassPatts, np.tile(patt, [round(t/len(self.Songs[i])),1]), axis = 0)
         syllClassPatts = syllClassPatts[1:,:]
         
+        
+        
         # if conceptors for syllables have not been learned already, learn them 
         if not self.syllableConceptorsLearned:
             # get list with unique syllables and create preprocessed  training and test data
@@ -170,7 +173,7 @@ class SongClassifier:
             for s in self.Songs:
                 songs += s
             songs = set(songs)
-            self.SyllClassData = preprocess(path, self.nSylls, nTrain, np.ones(len(songs)) * nTest, syll_names = songs, **dataPrepParams)
+            self.SyllClassData = preprocess(path, self.nSylls, nTrain, np.ones(self.nSylls) * nTest, syll_names = self.Sylls, **dataPrepParams)
             # initialize syllableClassifier and train it on training data
             self.SyllClass = syllableClassifier(
                 cLearningParams['neurons'],
@@ -179,16 +182,19 @@ class SongClassifier:
                 cLearningParams['inp_scale'],
                 cLearningParams['conn'])
             self.SyllClass.cLearning(nTrain, self.SyllClassData['train_data'], cLearningParams['gammaPos'], cLearningParams['gammaNeg'])
-            self.syllableConceptorsLearned = True            
-
+            self.syllableConceptorsLearned = True
+            
+        
         # run classification on syllClassPatts and store the evidences for each presented syllable
-        results = self.SyllClass.cTest(self.SyllClassData['test_data'], pattern = syllClassPatts)
+        sampleIdx = [0,round(nTest/2)]
+        results = self.SyllClass.cTest(self.SyllClassData['test_data'], pattern = syllClassPatts, sampleIdx = sampleIdx)
         evidences = results['evidences'][cType]
         if not useRawOutput:
             evidences_tmp = np.zeros_like(evidences)
             for syll in range(evidences.shape[0]):
                 evidences_tmp[syll,np.argmax(evidences[syll,:])] = 1
             evidences = evidences_tmp
+        sampleIdx = [round(nTest/2),nTest-1]
         
         # create list with entries for each pattern and store the respective evidences in those entries
         t_all = 0

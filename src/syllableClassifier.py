@@ -76,7 +76,7 @@ class syllableClassifier:
             self.c_pos[i] = fct.phi(self.c_pos[i], gamma_pos)
             self.c_neg[i] = fct.phi(self.c_neg[i], gamma_neg)
 
-    def cTest(self, test_data, pattern=None):
+    def cTest(self, test_data, pattern=None, sampleIdx=[]):
         """ 
         :Description: Function that uses trained conceptors to recognize syllables in data by going through the following steps:
             1. Feed each sample of each syllable into reservoir and collect its states
@@ -105,17 +105,19 @@ class syllableClassifier:
         if pattern is not None:
             # create new test data by using entries in pattern as indices for test_data
             sampleN = np.zeros(len(test_data), dtype = 'int')
+            if sampleIdx: sampleN = sampleN + sampleIdx[0]
             test_data_new = []
             for syll in pattern:
                 ind = np.argmax(syll)
                 data = test_data[ind]
-                maxN = len(data)
+                if not sampleIdx: sampleIdx = [0, len(data)-1]
+                maxN = len(data[sampleIdx[0]:sampleIdx[1]])
                 test_data_new.append(data[sampleN[ind]])
                 # use new sample each time a syllable is played
                 sampleN[ind] += 1
-                if sampleN[ind] >= maxN:
+                if sampleN[ind] >= sampleIdx[0] + maxN:
                     # if all samples of a syllable have been used, start from first again
-                    sampleN[ind] = 0
+                    sampleN[ind] = sampleIdx[0]
                 
             test_data = np.array(test_data_new)
         
