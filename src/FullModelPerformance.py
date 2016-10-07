@@ -80,10 +80,11 @@ for i in range(nRuns):
     for n in range(nSongs):
         SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
     
-    SC.loadSongs(useSyllRecog = True, SyllPath ='../data/birddb/syll/',RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
+    SC.loadSongs(useSyllRecog = True, SyllPath ='D:/Data/Projects/StudyProject/syll',RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
     SC.run(patterns = SC.patterns, nLayers = 1, pattRepRange = [meanSongLength, meanSongLength+1], maxPauseLength = maxPauseLength, HFCParams = HFCParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
     
-    performance[i] = SC.H.checkPerformance()
+    p = SC.H.checkPerformance()
+    performance[i] = np.mean(p[-1,:])
     print(i+1,'. run of ',nRuns,' runs is finished.')
 
 
