@@ -70,12 +70,11 @@ nRuns = 10
 
 meanSongLength = nTestSongs/nSongs
 performance = np.zeros(nRuns)
-
+idx = np.arange(0,nSongs)
 for i in range(nRuns):
     
     SC = SongClassifier(syllables, verbose = True)
     
-    idx = np.arange(0,nSongs)
     np.random.shuffle(idx)
     for n in range(nSongs):
         SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
