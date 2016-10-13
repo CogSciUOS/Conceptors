@@ -1,9 +1,9 @@
 """ Libraries """
 
 from matplotlib.pyplot import *
+from mpl_toolkits.mplot3d import Axes3D
 import os
 import argparse
-import pickle
 import sys
 
 """
@@ -374,9 +374,14 @@ try:
 except:
     sys.exit(0)
 
+perf = []
 
-for noise in np.arange(0,1,0.1):
-    cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
+#noiseRange = [4,2,1,0.5,0.25,0.125]
+noiseRange = [4,2,1,0.5]
+numSyllRange = np.arange(5,10,1)
+for noise in noiseRange:
+    for numSyll in numSyllRange:
+        cval_perc = runSyllClass(path=args.path, syllN=numSyll, trainN=args.trainN, cvalRuns=args.cvalRuns,
                 sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
                 invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
                 smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
@@ -384,11 +389,14 @@ for noise in np.arange(0,1,0.1):
                 gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
                 noise=args.data_noise
                 )
-    print(np.mean(cval_perc,axis=0))
+        perf.append(np.mean(cval_perc,axis=0)[2])
+        print(np.mean(cval_perc,axis=0)[2])
 
-# output = [results, args]
-#
-# if not args.targetDir:
-#     pickle.dump(output, open('Results.pkl', 'wb'))
-# else:
-#     pickle.dump(output, open(os.path.abspath(args.targetDir + '/' + 'Results.pkl'), 'wb'))
+fig = figure()
+ax = fig.add_subplot(111, projection='3d')
+print(noiseRange)
+print(numSyllRange)
+print(perf)
+Axes3D.scatter(np.array(noiseRange),np.array(numSyllRange),np.array(perf))
+fig.show()
+
