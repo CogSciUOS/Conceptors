@@ -76,14 +76,6 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         samples = []
         n_test = np.random.random_integers(10, 50, syllN)
 
-        for j in range(syllN):
-            indices = np.arange(0, trainN + n_test[j], 1)
-            ind_tmp = indices.copy().tolist()
-            random.shuffle(ind_tmp)
-            ind_tmp = np.array(ind_tmp)
-
-            samples.append(ind_tmp)
-
         """ Get and preprocess data """
         data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
         # reinitialize syllable classifier

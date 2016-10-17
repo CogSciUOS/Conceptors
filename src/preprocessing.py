@@ -163,12 +163,7 @@ def load_data(syllable, N, used_samples, noise, sample_order = None):
             rate, wave = wav.read(syllable + '/' + samples[i + used_samples])
 
             if random.random() < noise: #should noise be added?
-                wave_noise = 0.1
-                try:
-                    wave_noise = sp.sqrt(scipy.var(wave)/stat.signaltonoise(wave))
-                except:
-                    print("SVD did not converge")
-
+                wave_noise = sp.sqrt(scipy.var(wave)/stat.signaltonoise(wave))
                 wave = wave + wave_noise
 
             syllable_waves.append([wave,rate])
