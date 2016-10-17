@@ -18,7 +18,7 @@ import random
 from python_speech_features import mfcc
 
 def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds_type, mel_channels, inv_coefforder,
-               winsize, frames, smooth_length, poly_order, inc_der, noise, syll_names=None, samples=None):
+               winsize, frames, smooth_length, poly_order, inc_der, noise, snr, syll_names=None, samples=None):
     """
     Function that performs the following preprocessing steps on data in file:
     1. loading
@@ -51,17 +51,17 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
             if not samples:
                 trainDataRaw.append(
-                    load_data(syll_path, n_train, 0, noise=0)
+                    load_data(syll_path, n_train, 0, snr=0, noise=0)
                 )
                 testDataRaw.append(
-                    load_data(syll_path, n_test[i], n_train, noise=noise)
+                    load_data(syll_path, n_test[i], n_train, snr=snr, noise=noise)
                 )
             else:
                 trainDataRaw.append(
-                    load_data(syll_path, n_train, 0, noise=0, sample_order=samples[i][0:n_train])
+                    load_data(syll_path, n_train, 0, snr=0, noise=0, sample_order=samples[i][0:n_train])
                 )
                 testDataRaw.append(
-                    load_data(syll_path, n_test[i], n_train, noise=noise, sample_order=samples[i][n_train::])
+                    load_data(syll_path, n_test[i], n_train, snr=snr, noise=noise, sample_order=samples[i][n_train::])
                 )
     else:
         # sample random from the list of available syllables
@@ -75,17 +75,17 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                     # try to find a syllable that fullfills the condition of the n_train length
                     if not samples:
                         trainDataRaw.append(
-                            load_data(syll_path, n_train, 0, 0)
+                            load_data(syll_path, n_train, 0, 0, 0)
                         )
                         testDataRaw.append(
-                            load_data(syll_path, n_test[i], n_train, noise=noise)
+                            load_data(syll_path, n_test[i], n_train, snr=snr, noise=noise)
                         )
                     else:
                         trainDataRaw.append(
-                            load_data(syll_path, n_train, 0, 0, sample_order=samples[i][0:n_train])
+                            load_data(syll_path, n_train, 0, 0, 0, sample_order=samples[i][0:n_train])
                         )
                         testDataRaw.append(
-                            load_data(syll_path, n_test[i], n_train, noise=noise, sample_order=samples[i][n_train::])
+                            load_data(syll_path, n_test[i], n_train, snr=snr, noise=noise, sample_order=samples[i][n_train::])
                         )
                     success = True
                 except:
@@ -145,12 +145,14 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     return out
 
-def load_data(syllable, N, used_samples, noise, sample_order = None):
+def load_data(syllable, N, used_samples,noise, snr, sample_order = None):
     """Function that goes through all N samples of syllable and loads its wave data.
     
     :param syllable: complete path name of syllable (string)
     :param N: number of samples to load
     :param used_samples: number of samples to skip in the beginning
+    :param noise: the fraction of data that should be affected by noise
+    :param snr: the strength of the noise
     :param sample_order: if not None should be vector of indices of samples to be loaded (default = None)
     
     :returns syllable_waves: list of N sample waves of syllable
@@ -163,8 +165,8 @@ def load_data(syllable, N, used_samples, noise, sample_order = None):
             rate, wave = wav.read(syllable + '/' + samples[i + used_samples])
 
             if random.random() < noise: #should noise be added?
-                wave_noise = sp.sqrt(scipy.var(wave)/stat.signaltonoise(wave))
-                wave = wave + wave_noise
+                noiseLvl = np.sqrt(np.var(wave) / snr)
+                wave = wave + noiseLvl * np.random.randn(len(wave))
 
             syllable_waves.append([wave,rate])
     else:
@@ -172,8 +174,8 @@ def load_data(syllable, N, used_samples, noise, sample_order = None):
             rate, wave = wav.read(syllable + '/' + samples[i])
 
             if random.random() < noise:  # should noise be added?
-                wave_noise = sp.sqrt(scipy.var(wave)/stat.signaltonoise(wave))
-                wave = wave + wave_noise
+                noiseLvl = np.sqrt(np.var(wave) / snr)
+                wave = wave + noiseLvl * np.random.randn(len(wave))
 
             syllable_waves.append([wave,rate])
     return syllable_waves

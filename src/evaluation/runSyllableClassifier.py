@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore", category=np.ComplexWarning)
 
 def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, invCoeffOrder, winsize, melFramesN,
         smoothL, polyOrder, incDer, resN, specRad, biasScale, inpScale, conn, gammaPos, gammaNeg, plotExample,
-        noise, syll_names=['as','bl','ck','dm','el']):
+        noise, snr, syll_names=['as','bl','ck','dm','el']):
     """
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
@@ -55,7 +55,8 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'smooth_length': smoothL,
         'inc_der': incDer,
         'poly_order': polyOrder,
-        'noise': noise
+        'noise': noise,
+        'snr': snr
         #'syll_names': syll_names
     }
 
@@ -385,7 +386,7 @@ for noise in noiseRange:
                 smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
                 specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
                 gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
-                noise=noise)
+                noise=0.2, snr=noise)
             perf_val = np.mean(cval_perc, axis=0)[2]
         except:
             print(str(noise) + ' and ' + str(numSyll) + ' have not been working...')
