@@ -376,9 +376,9 @@ except:
 
 perf = []
 
-noiseRange = [4,2,1,0.5,0.25,0.125]
+noiseRange = [4, 2, 1, 0.5, 0.25, 0.125, 0.0]
 #noiseRange = [4,2,1,0.5]
-numSyllRange = np.arange(3,9,1).tolist()
+numSyllRange = np.arange(5, 30, 2).tolist()
 
 perf_points = np.empty([3, len(noiseRange) * len(numSyllRange)])
 
