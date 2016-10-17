@@ -376,14 +376,16 @@ except:
 
 perf = []
 
-#noiseRange = [4,2,1,0.5,0.25,0.125]
-noiseRange = [4,2,1,0.5]
-numSyllRange = np.arange(4,8,1).tolist()
+noiseRange = [4,2,1,0.5,0.25,0.125]
+#noiseRange = [4,2,1,0.5]
+numSyllRange = np.arange(3,9,1).tolist()
 
 perf_points = np.empty([3, len(noiseRange) * len(numSyllRange)])
 
 for noise in noiseRange:
     for numSyll in numSyllRange:
+        cval_perc = 0
+        perf_val = 0
         try:
             cval_perc = runSyllClass(path=args.path, syllN=numSyll, trainN=args.trainN, cvalRuns=args.cvalRuns,
                 sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
@@ -391,22 +393,12 @@ for noise in noiseRange:
                 smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
                 specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
                 gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
-                noise=args.data_noise)
+                noise=noise)
+            perf_val = np.mean(cval_perc, axis=0)[2]
         except:
-            print(noise + ' and ' + numSyll + ' have not been working...')
+            print(str(noise) + ' and ' + str(numSyll) + ' have not been working...')
 
-        perf_val = np.mean(cval_perc,axis=0)[2]
-        perf_points[:,noiseRange.index(noise)*numSyllRange.index(numSyll)] = perf_val
         perf.append(perf_val)
         print(perf_val)
 
-fig = figure()
-ax = fig.add_subplot(111, projection='3d')
-print(noiseRange)
-print(numSyllRange)
 print(perf)
-print(perf_points)
-
-ax.scatter(perf_points[1,:], perf_points[2,:], perf_points[3,:])
-
-show()
