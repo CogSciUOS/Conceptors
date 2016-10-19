@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore", category=np.ComplexWarning)
 
 def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, invCoeffOrder, winsize, melFramesN,
         smoothL, polyOrder, incDer, resN, specRad, biasScale, inpScale, conn, gammaPos, gammaNeg, plotExample,
-        noise, snr, syll_names=['as','bl','ck','dm','el']):
+        snr):
     """
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
@@ -55,9 +55,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'smooth_length': smoothL,
         'inc_der': incDer,
         'poly_order': polyOrder,
-        'noise': noise,
         'snr': snr
-        #'syll_names': syll_names
     }
 
     clearnParams = {
@@ -86,7 +84,6 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         evidences.append(results['evidences'])
         performances.append(results['class_perf'])
 
-    #print(data['train_data_downsample'])
     cval_results = np.array(performances)
 
     """ Plotting """
@@ -294,12 +291,6 @@ parser.add_argument(
     help='List of 2 booleans indicating whether to include 1./2. derivative of mfcc data or not (default = [True,True])'
 )
 parser.add_argument(
-    '--data_noise',
-    default=0.92,
-    type=float,
-    help='The proportion of samples that should be disturbed by noise'
-)
-parser.add_argument(
     '--resN',
     default=10,
     type=int,
@@ -369,13 +360,14 @@ except:
 
 perf = []
 
-noiseRange = [4, 2, 1, 0.5, 0.25, 0.125, 0.0]
-#noiseRange = [4,2,1,0.5]
-numSyllRange = np.arange(5, 30, 2).tolist()
+#noiseRange = [4, 2, 1, 0.5, 0.25, 0.125, 0.0]
+snrRange = [0]
+#numSyllRange = np.arange(20, 31, 5).tolist()
+numSyllRange = [30]
 
-perf_points = np.empty([3, len(noiseRange) * len(numSyllRange)])
+perf_points = np.empty([3, len(snrRange) * len(numSyllRange)])
 
-for noise in noiseRange:
+for snr in snrRange:
     for numSyll in numSyllRange:
         cval_perc = 0
         perf_val = 0
@@ -385,11 +377,10 @@ for noise in noiseRange:
                 invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
                 smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
                 specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-                gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
-                noise=0.2, snr=noise)
+                gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=snr)
             perf_val = np.mean(cval_perc, axis=0)[2]
         except:
-            print(str(noise) + ' and ' + str(numSyll) + ' have not been working...')
+            print(str(snr) + ' and ' + str(numSyll) + ' have not been working...')
 
         perf.append(perf_val)
         print(perf_val)
