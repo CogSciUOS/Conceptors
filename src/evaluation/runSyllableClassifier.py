@@ -304,7 +304,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--biasScale',
-    default=0.5,
+    default=0.2,
     type=float,
     help='Scaling of the bias term to be introduced to each reservoir element (default = 0.2)'
 )
