@@ -18,7 +18,7 @@ import random
 from python_speech_features import mfcc
 
 def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds_type, mel_channels, inv_coefforder,
-               winsize, frames, smooth_length, poly_order, inc_der, snr, syll_names=None, samples=None):
+               winsize, frames, smooth_length, inc_der, poly_order, snr, syll_names=None, samples=None):
     """
     Function that performs the following preprocessing steps on data in file:
     1. loading
