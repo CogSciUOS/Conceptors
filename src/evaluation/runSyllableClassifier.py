@@ -1,7 +1,6 @@
 """ Libraries """
 
 from matplotlib.pyplot import *
-from mpl_toolkits.mplot3d import Axes3D
 import os
 import argparse
 import sys
@@ -74,6 +73,8 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
 
         samples = []
         n_test = np.random.random_integers(10, 50, syllN)
+        print(n_test)
+        #n_test = [43, 14, 19, 28, 42, 15, 37, 19, 29, 15, 12, 48, 18, 11, 42, 28, 15, 25, 23, 32, 36, 50, 50, 11, 49, 21, 13, 33, 45, 39]
 
         """ Get and preprocess data """
         data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
@@ -233,7 +234,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--cvalRuns',
-    default=10,
+    default=5,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -361,7 +362,7 @@ except:
 perf = []
 
 #noiseRange = [4, 2, 1, 0.5, 0.25, 0.125, 0.0]
-snrRange = [0]
+snrRange = [0.0]
 #numSyllRange = np.arange(20, 31, 5).tolist()
 numSyllRange = [30]
 

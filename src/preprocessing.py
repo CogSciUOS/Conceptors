@@ -33,7 +33,10 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     """ Load Data """
     syllables = [files for files in os.listdir(syllable_directory)]
-    #syllables.remove('.gitignore')
+    try:
+        syllables.remove('.gitignore')
+    except ValueError:
+        print('not using github version...') # nothing to be done
 
     trainDataRaw = []
     testDataRaw = []
