@@ -15,6 +15,8 @@ import os
 import scipy.io.wavfile as wav
 import random
 
+import mongolog as logger
+
 from python_speech_features import mfcc
 
 def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds_type, mel_channels, inv_coefforder,
@@ -33,10 +35,13 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     """ Load Data """
     syllables = [files for files in os.listdir(syllable_directory)]
+
     try:
         syllables.remove('.gitignore')
     except ValueError:
         print('not using github version...') # nothing to be done
+
+    logger.write_val('syllables available', syllables)
 
     trainDataRaw = []
     testDataRaw = []
@@ -99,27 +104,46 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                     else:
                         break
 
+    logger.write_big_arr('train_data_raw', trainDataRaw)
+    logger.write_big_arr('test_data_raw', testDataRaw)
+
     """ Downsampling """
 
     trainDataDS = downSample(trainDataRaw, sample_rate, ds_type)
     testDataDS = downSample(testDataRaw, sample_rate, ds_type)
+
+    logger.write_big_arr('train_data_ds', trainDataDS)
+    logger.write_big_arr('test_data_ds', testDataDS)
 
     """ MFCC extraction """
 
     trainDataMel = getMEL(trainDataDS, mel_channels, inv_coefforder)
     testDataMel = getMEL(testDataDS, mel_channels, inv_coefforder)
 
+    logger.write_big_arr('train_data_mel', trainDataMel)
+    logger.write_big_arr('test_data_mel', testDataMel)
+
+
     """ shift and scale both datasets according to properties of training data """
 
     shifts, scales = getShiftsAndScales(trainDataMel)
 
+    logger.write_arr('shifts', shifts)
+    logger.write_arr('scales', scales)
+
     trainDataNormalized = normalizeData(trainDataMel, shifts, scales)
     testDataNormalized = normalizeData(testDataMel, shifts, scales)
+
+    logger.write_big_arr('train_data_normalized', trainDataNormalized)
+    logger.write_big_arr('test_data_normalized', testDataNormalized)
 
     """ Interpolate datapoints so that each sample has only (smoothLength) timesteps """
 
     trainDataSmoothend = smoothenData(trainDataNormalized, smooth_length, poly_order, mel_channels)
     testDataSmoothend = smoothenData(testDataNormalized, smooth_length, poly_order, mel_channels)
+
+    logger.write_big_arr('train_data_smoothed', trainDataSmoothend)
+    logger.write_big_arr('test_data_smoothed', testDataSmoothend)
 
     """ Include first and second derivatives of mfcc """
 
@@ -128,6 +152,9 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     trainDataFinal = trainDataDer
     testDataFinal = testDataDer
+
+    logger.write_big_arr('train_data_final', trainDataFinal)
+    logger.write_big_arr('test_data_final', testDataFinal)
 
     out = {
         'train_data': trainDataFinal,
@@ -160,7 +187,9 @@ def load_data(syllable, N, used_samples, snr, sample_order = None):
     :returns syllable_waves: list of N sample waves of syllable
     """
 
+    logger.write_val('load syllable files', syllable)
     samples = [files for files in os.listdir(syllable)]
+    logger.write_val('files found', samples)
     syllable_waves = []
     if sample_order is None:
         for i in range(int(N)):

@@ -21,9 +21,15 @@ import preprocessing
 import numpy as np
 import random
 
+import mongolog as logger
+logger.configure('new')
+
 # set random seeds for both numpy and random
-np.random.seed(255)
-random.seed(255)
+SEED = 255
+np.random.seed(SEED)
+random.seed(SEED)
+
+logger.write_val("starting with seed", SEED)
 
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
@@ -64,20 +70,40 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'inp_scale': inpScale,
         'conn': conn}
 
+    logger.write_val('prep params', prepParams)
+    logger.write_val('conceptor params', clearnParams)
+
     performances = []
     evidences = []
 
     for i in range(cvalRuns):
 
+        logger.write_val('start cross validation run', i)
         syllClass = sC.syllableClassifier(**clearnParams)
 
-        n_test = np.random.random_integers(10, 50, syllN)
+        samples = []
+        #n_test = np.random.random_integers(10, 50, syllN)
+        #print(n_test)
+        #n_test = [43, 14, 19, 28, 42, 15, 37, 19, 29, 15, 12, 48, 18, 11, 42, 28, 15, 25, 23, 32, 36, 50, 50, 11, 49, 21, 13, 33, 45, 39]
+        n_test = [15, 15, 26, 46, 41, 43, 48, 19, 16, 28, 14, 18, 10, 35, 13, 10, 10, 29, 22, 30, 15, 13, 50, 15, 11, 29, 30, 23, 14, 45]
+
+        logger.write_arr("n_test", n_test)
 
         """ Get and preprocess data """
+        logger.write('start preprocessing')
         data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
+        logger.write('end preprocessing')
+
+        logger.write('start learning')
         # reinitialize syllable classifier
         syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
+        logger.write('end learning')
+
+        logger.write('start testing')
         results = syllClass.cTest(data['test_data'])
+        logger.write('end testing')
+
+        logger.write_arr("results", results)
 
         evidences.append(results['evidences'])
         performances.append(results['class_perf'])
@@ -220,7 +246,7 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=10,
+    default=30,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
@@ -378,8 +404,9 @@ for snr in snrRange:
                 gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=snr)
             print(cval_perc)
             perf_val = np.mean(cval_perc, axis=0)[2]
-        except:
+        except Exception as err:
             print(str(snr) + ' and ' + str(numSyll) + ' have not been working...')
+            print(err)
 
         perf.append(perf_val)
         print(perf_val)
