@@ -71,10 +71,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
 
         syllClass = sC.syllableClassifier(**clearnParams)
 
-        samples = []
         n_test = np.random.random_integers(10, 50, syllN)
-        print(n_test)
-        #n_test = [43, 14, 19, 28, 42, 15, 37, 19, 29, 15, 12, 48, 18, 11, 42, 28, 15, 25, 23, 32, 36, 50, 50, 11, 49, 21, 13, 33, 45, 39]
 
         """ Get and preprocess data """
         data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
@@ -88,8 +85,8 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     cval_results = np.array(performances)
 
     """ Plotting """
-    #if plotExample:
-    #    plot_results(data, cval_results, evidences, cvalRuns)
+    if plotExample:
+        plot_results(data, cval_results, evidences, cvalRuns)
 
     return cval_results * 100. #returns the results of the conceptors in percentage
 
@@ -228,13 +225,13 @@ parser.add_argument(
 )
 parser.add_argument(
     '--trainN',
-    default=30,
+    default=20,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=5,
+    default=2,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -293,7 +290,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--resN',
-    default=10,
+    default=20,
     type=int,
     help='Size of the reservoir to be used for conceptor learning (default = 10)'
 )
@@ -364,7 +361,7 @@ perf = []
 #noiseRange = [4, 2, 1, 0.5, 0.25, 0.125, 0.0]
 snrRange = [0.0]
 #numSyllRange = np.arange(20, 31, 5).tolist()
-numSyllRange = [30]
+numSyllRange = [20]
 
 perf_points = np.empty([3, len(snrRange) * len(numSyllRange)])
 
@@ -379,6 +376,7 @@ for snr in snrRange:
                 smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
                 specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
                 gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=snr)
+            print(cval_perc)
             perf_val = np.mean(cval_perc, axis=0)[2]
         except:
             print(str(snr) + ' and ' + str(numSyll) + ' have not been working...')
