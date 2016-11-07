@@ -59,7 +59,7 @@ class SongClassifier:
             self.Songs.append(list(itertools.chain.from_iterable([[songSylls[i] for i in np.random.choice(range(len(songSylls)), nSongSylls, replace = True)] for j in range(sequenceReps)])))
 
     def loadSongs(self, useSyllRecog = False, SyllPath = None, t_learn = 400, t_cadapt = 2000, t_wash = 200, t_recall = 200, 
-                  RFCParams = {}, loadingParams = {}, dataPrepParams = {}, cLearningParams = {}):
+                  maxTries = 5, RFCParams = {}, loadingParams = {}, dataPrepParams = {}, cLearningParams = {}):
         """
         :Description: Function that loads all songs stored in the SongClassifier instance in a RFC
         
@@ -70,10 +70,11 @@ class SongClassifier:
             4.  t_cadapt:        number of timesteps used for letting the autoconceptor adapt for each pattern (default = 2000)
             5.  t_wash:          number of timesteps used for running the reservoir with input before learning period starts (default = 200)
             6.  t_recall:        number of timesteps used for recalling each pattern by applying the conceptor on the reservoir (default = 200)
-            7.  RFCParams:       dictionary of keyword arguments to initilaze the RFC class with (defaults of RFC class will be used if not specified)
-            8.  loadingParams:   dictionary of keyword arguments to load the patterns into the RFC with (defaults of RFC class will be used if not specified)
-            9.  dataPrepParams:  dictionary of keyword arguments for data preprocessing if syllable recognition is to be used (defaults of preprocessing function will be used if not specified)
-            10. cLearningParams: dictionary of keyword arguments to learn a conceptor for each syllable if syllable recognition is to be used (defaults of syllable classifier will be used if not specified)
+            7.  maxTries:        maximum number of tries to load songs successfully into RFC (default = 5)
+            8.  RFCParams:       dictionary of keyword arguments to initilaze the RFC class with (defaults of RFC class will be used if not specified)
+            9.  loadingParams:   dictionary of keyword arguments to load the patterns into the RFC with (defaults of RFC class will be used if not specified)
+            10.  dataPrepParams:  dictionary of keyword arguments for data preprocessing if syllable recognition is to be used (defaults of preprocessing function will be used if not specified)
+            11. cLearningParams: dictionary of keyword arguments to learn a conceptor for each syllable if syllable recognition is to be used (defaults of syllable classifier will be used if not specified)
 
         """
 
@@ -111,17 +112,22 @@ class SongClassifier:
         # try loading patterns into RFC until each pattern can be recalled correctly
         success = False
         if self.verbose: print('Loading songs into RFC...')
+        n = 0
         while not success:
-            self.R = RF_Reservoir(**RFCParams)
-            self.R.load(patternsRFC, t_learn = t_learn, t_cadapt = t_cadapt, t_wash = t_wash, **loadingParams)
-            self.R.recall(t_recall = t_recall)
-            recallError = checkRecall(self.patterns, self.R.Y_recalls)
-            if self.verbose: print('Mean recall error of each pattern (in range [0, 1]): ', recallError)
-            if np.sum(recallError) == 0:
-                if self.verbose: print('Songs succesfully loaded into RFC.')
-                success = True
-            elif self.verbose:
-                print('Loading failed for at least one song. Next try...')
+            n += 1
+            if n > maxTries: raise ValueError('Song Loading failed ',n-1,' times. Process aborted.')
+            try:
+                self.R = RF_Reservoir(**RFCParams)
+                self.R.load(patternsRFC, t_learn = t_learn, t_cadapt = t_cadapt, t_wash = t_wash, **loadingParams)
+                self.R.recall(t_recall = t_recall)
+                recallError = checkRecall(self.patterns, self.R.Y_recalls)
+                if self.verbose: print('Mean recall error of each pattern (in range [0, 1]): ', recallError)
+                if np.sum(recallError) == 0:
+                    if self.verbose: print('Songs succesfully loaded into RFC.')
+                    success = True
+                elif self.verbose:
+                    print('Loading failed for at least one song. Next try...')
+            except: print('SVD did not converge on go number ',n,'. Next try...')
     
     def runSyllableClassification(self, SyllPath = None, nTrain = 50, nTest = 20, cType = 2, useStoredPatts = True, 
                                   useRawOutput = True, pattTimesteps = None, maxPauseLength = 3, dataPrepParams = {}, cLearningParams = {}):
