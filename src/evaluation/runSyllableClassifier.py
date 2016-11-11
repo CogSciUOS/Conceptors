@@ -21,7 +21,7 @@ import preprocessing
 import numpy as np
 import random
 
-import mongolog as logger
+import evaluation.mongolog as logger
 logger.configure('new')
 
 # set random seeds for both numpy and random
@@ -44,8 +44,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
     """
-
-    logger.write(inspect.currentframe())
+    logger.write_frame_info(inspect.currentframe())
     path = os.path.abspath(path)
 
     """ assign parameters """
