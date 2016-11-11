@@ -25,7 +25,7 @@ import evaluation.mongolog as logger
 logger.configure('new')
 
 # set random seeds for both numpy and random
-SEED = 240
+SEED = 42
 np.random.seed(SEED)
 random.seed(SEED)
 
@@ -82,8 +82,6 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
 
         samples = []
         n_test = np.random.random_integers(10, 50, syllN)
-        #print(n_test)
-        #n_test = [43, 14, 19, 28, 42, 15, 37, 19, 29, 15, 12, 48, 18, 11, 42, 28, 15, 25, 23, 32, 36, 50, 50, 11, 49, 21, 13, 33, 45, 39]
         # n_test = [15, 15, 26, 46, 41, 43, 48, 19, 16, 28, 14, 18, 10, 35, 13, 10, 10, 29, 22, 30, 15, 13, 50, 15, 11, 29, 30, 23, 14, 45]
 
         logger.write_arr("n_test", n_test)
@@ -245,19 +243,19 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=30,
+    default=2,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '--trainN',
-    default=20,
+    default=30,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
     # default=2,
-    default=5,
+    default=1,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -270,7 +268,6 @@ parser.add_argument(
 parser.add_argument(
     '--interpolType',
     default='mean',
-    # default='IIR',
     type=str,
     help='type of interpolation to be used for downsampling.'
 )
@@ -283,7 +280,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--invCoeffOrder',
-    default=True,
+    default=False,
     help='Boolean, if true: Extract last n mfcc instead of first n (default = False)'
 )
 parser.add_argument(
@@ -301,7 +298,7 @@ parser.add_argument(
 parser.add_argument(
     '--smoothL',
     # default=5,
-    default=4,
+    default=5,
     type=int,
     help='Desired length of the smoothed mfcc data (default = 4)'
 )
@@ -320,7 +317,7 @@ parser.add_argument(
 parser.add_argument(
     '--resN',
     # default=20,
-    default=8,
+    default=10,
     type=int,
     help='Size of the reservoir to be used for conceptor learning (default = 10)'
 )
@@ -333,7 +330,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--biasScale',
-    default=0.2,
+    default=0.5,
     type=float,
     help='Scaling of the bias term to be introduced to each reservoir element (default = 0.2)'
 )
@@ -358,13 +355,12 @@ parser.add_argument(
 parser.add_argument(
     '--gammaNeg',
     default=20,
-    # default=27,
     type=int,
     help='Aperture to be used for computation of the negative conceptors'
 )
 parser.add_argument(
     '--plotExample',
-    default=True,
+    default=False,
     help='If true, plot raw & preprocessed mfcc data as well as conceptor evidences (default = False)'
 )
 parser.add_argument(
@@ -393,7 +389,7 @@ perf = []
 #noiseRange = [4, 2, 1, 0.5, 0.25, 0.125, 0.0]
 snrRange = [0.0]
 #numSyllRange = np.arange(20, 31, 5).tolist()
-numSyllRange = [20]
+numSyllRange = [2]
 
 perf_points = np.empty([3, len(snrRange) * len(numSyllRange)])
 
