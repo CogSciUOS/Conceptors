@@ -6,6 +6,9 @@ import numpy as np
 import reservoirConceptor as c
 import functions as fct
 
+import mongolog as logger
+import inspect
+
 
 class syllableClassifier:
     __slots__ = (
@@ -26,6 +29,7 @@ class syllableClassifier:
             4. inp_scale:           scaling of the external input each neuron may receive
             5. conn:                strength of the downscaling of the reservoir connections
         """
+        logger.write(inspect.currentframe())
         self.size = neurons
         self.res = c.Reservoir(N=neurons, NetSR=spectral_radius, bias_scale=bias_scale, inp_scale=inp_scale, conn=conn)
         self.c_pos = []
@@ -46,6 +50,7 @@ class syllableClassifier:
             4. gamma_neg:   aperture of the negative conceptors (default = 27)
         """
         
+        logger.write(inspect.currentframe())
         # loop over syllables
         for syllable in np.array(train_data):
             R_syll = np.zeros((syllable.shape[1] * (self.size + syllable.shape[2]), syllable.shape[0]))
@@ -91,6 +96,7 @@ class syllableClassifier:
             2. class_perf:  Mean classification performance on test data set for
                             positive, negative and combined conceptors
         """
+        logger.write(inspect.currentframe())
 
         h_pos = []
         h_neg = []

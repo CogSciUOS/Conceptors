@@ -16,6 +16,7 @@ import scipy.io.wavfile as wav
 import random
 
 import mongolog as logger
+import inspect
 
 from python_speech_features import mfcc
 
@@ -32,6 +33,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
     7. Add derivatives
     8. Run PCA
     """
+    logger.write(inspect.currentframe())
 
     """ Load Data """
     syllables = [files for files in os.listdir(syllable_directory)]
@@ -186,6 +188,7 @@ def load_data(syllable, N, used_samples, snr, sample_order = None):
     
     :returns syllable_waves: list of N sample waves of syllable
     """
+    logger.write(inspect.currentframe())
 
     logger.write_val('load syllable files', syllable)
     samples = [files for files in os.listdir(syllable)]
@@ -225,6 +228,7 @@ def zeroPad(data):
     :returns syllables: list with same number of entries as data, but with zero
                         padded arrays
     """
+    logger.write(inspect.currentframe())
 
     max_length = 0
     syllables = []
@@ -256,6 +260,7 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
     :returns syllables: downsampled data, in same format as input data
     """
 
+    logger.write(inspect.currentframe())
     syllables = []
     for syllable in data:
         samples = []
@@ -265,8 +270,9 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
                 pad_size = int(math.ceil(float(sample[0].size)/SR)*SR - sample[0].size)
                 s_padded = np.append(sample[0], np.zeros(pad_size)*np.NaN)
                 s_new = sp.nanmean(s_padded.reshape(-1,SR), axis=1)
-            elif dsType == 'FIR':
-                s_new = ss.decimate(sample[0],SR)
+            # elif dsType == 'FIR':
+            elif dsType == 'IIR':
+                s_new = ss.decimate(sample[0],int(SR))
             samples.append([s_new, sampleRate])
         syllables.append(samples)
     return syllables
@@ -288,6 +294,7 @@ def getMEL(data, n_mfcc = 12, invCoeffOrder = False, winsize = 20, frames = 64):
     :returns syllables: list with mfccs for n_mfcc mel channels for each sample of each syllable
     """
 
+    logger.write(inspect.currentframe())
     syllables = []
     i = 0
     for syllable in data:
@@ -326,6 +333,7 @@ def getShiftsAndScales(data):
     :returns scales: 1 / (maximum mfcc - minimum mfcc) for each of the 12 channels (vector of length 12)
     """
 
+    logger.write(inspect.currentframe())
     if len(data) == 0:
         return 0, 0
 
@@ -350,6 +358,7 @@ def normalizeData(data, shifts, scales):
     :returns newData: list of normalized data
     """
 
+    logger.write(inspect.currentframe())
     newData = []
     for syllable_i, syllable in enumerate(data):
         newData.append([])
@@ -372,6 +381,7 @@ def smoothenData(data, smoothLength, polyOrder, channelsN):
     :returns newData: smoothend and downsampled data
     """
 
+    logger.write(inspect.currentframe())
     newData = []
     for syllable in data:
         newSyllable = []
@@ -400,6 +410,7 @@ def runPCA(data, n):
     :returns dataRed: Dimensionality reduced list
     """
 
+    logger.write(inspect.currentframe())
     if n > data[0][0].shape[1]:
         raise ValueError('Number of PCs to use exceeds dimensionality of the data')
 
@@ -436,6 +447,7 @@ def mfccDerivates(data, Der1 = True, Der2 = True):
     :return devdata: MFCC data including derivatives
     """
 
+    logger.write(inspect.currentframe())
     if not Der1:
         return data
     if Der1:

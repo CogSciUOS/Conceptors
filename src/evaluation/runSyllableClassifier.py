@@ -25,7 +25,7 @@ import mongolog as logger
 logger.configure('new')
 
 # set random seeds for both numpy and random
-SEED = 255
+SEED = 240
 np.random.seed(SEED)
 random.seed(SEED)
 
@@ -34,7 +34,6 @@ logger.write_val("starting with seed", SEED)
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 warnings.filterwarnings("ignore", category=np.ComplexWarning)
-
 
 """ Function """
 
@@ -46,6 +45,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     conceptors.
     """
 
+    logger.write(inspect.currentframe())
     path = os.path.abspath(path)
 
     """ assign parameters """
@@ -82,10 +82,10 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         syllClass = sC.syllableClassifier(**clearnParams)
 
         samples = []
-        #n_test = np.random.random_integers(10, 50, syllN)
+        n_test = np.random.random_integers(10, 50, syllN)
         #print(n_test)
         #n_test = [43, 14, 19, 28, 42, 15, 37, 19, 29, 15, 12, 48, 18, 11, 42, 28, 15, 25, 23, 32, 36, 50, 50, 11, 49, 21, 13, 33, 45, 39]
-        n_test = [15, 15, 26, 46, 41, 43, 48, 19, 16, 28, 14, 18, 10, 35, 13, 10, 10, 29, 22, 30, 15, 13, 50, 15, 11, 29, 30, 23, 14, 45]
+        # n_test = [15, 15, 26, 46, 41, 43, 48, 19, 16, 28, 14, 18, 10, 35, 13, 10, 10, 29, 22, 30, 15, 13, 50, 15, 11, 29, 30, 23, 14, 45]
 
         logger.write_arr("n_test", n_test)
 
@@ -257,7 +257,8 @@ parser.add_argument(
 )
 parser.add_argument(
     '--cvalRuns',
-    default=2,
+    # default=2,
+    default=5,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -270,12 +271,14 @@ parser.add_argument(
 parser.add_argument(
     '--interpolType',
     default='mean',
+    # default='IIR',
     type=str,
     help='type of interpolation to be used for downsampling.'
 )
 parser.add_argument(
     '--mfccN',
-    default=20,
+    # default=20,
+    default=25,
     type=int,
     help='Number of mel frequency cepstral coefficients to extract for each mel frame (default = 25, which is the maximum possible)'
 )
@@ -298,7 +301,8 @@ parser.add_argument(
 )
 parser.add_argument(
     '--smoothL',
-    default=5,
+    # default=5,
+    default=4,
     type=int,
     help='Desired length of the smoothed mfcc data (default = 4)'
 )
@@ -316,13 +320,15 @@ parser.add_argument(
 )
 parser.add_argument(
     '--resN',
-    default=20,
+    # default=20,
+    default=8,
     type=int,
     help='Size of the reservoir to be used for conceptor learning (default = 10)'
 )
 parser.add_argument(
     '--specRad',
     default=1.1,
+    # default=1.2,
     type=float,
     help='Spectral radius of the connectivity matrix of the reservoir (default = 1.2)'
 )
@@ -353,6 +359,7 @@ parser.add_argument(
 parser.add_argument(
     '--gammaNeg',
     default=20,
+    # default=27,
     type=int,
     help='Aperture to be used for computation of the negative conceptors'
 )
@@ -395,18 +402,18 @@ for snr in snrRange:
     for numSyll in numSyllRange:
         cval_perc = 0
         perf_val = 0
-        try:
-            cval_perc = runSyllClass(path=args.path, syllN=numSyll, trainN=args.trainN, cvalRuns=args.cvalRuns,
-                sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
-                invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
-                smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
-                specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-                gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=snr)
-            print(cval_perc)
-            perf_val = np.mean(cval_perc, axis=0)[2]
-        except Exception as err:
-            print(str(snr) + ' and ' + str(numSyll) + ' have not been working...')
-            print(err)
+        # try:
+        cval_perc = runSyllClass(path=args.path, syllN=numSyll, trainN=args.trainN, cvalRuns=args.cvalRuns,
+            sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
+            invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
+            smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
+            specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
+            gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=snr)
+        print(cval_perc)
+        perf_val = np.mean(cval_perc, axis=0)[2]
+        # except Exception as err:
+        #     print(str(snr) + ' and ' + str(numSyll) + ' have not been working...')
+        #     print(err)
 
         perf.append(perf_val)
         print(perf_val)
