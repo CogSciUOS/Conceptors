@@ -3,6 +3,21 @@ import pickle
 from pymongo import MongoClient
 from bson.binary import Binary
 from datetime import datetime
+import inspect
+import numpy as np
+
+"""
+this weird section of code allows modules in the parent directory to be imported here
+it's the only way to do it in a way that allows you to run the file from other directories
+and still have it work properly
+"""
+import os
+import sys
+import inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+sys.path.insert(0,parentdir)
+import syllableClassifier
 
 
 '''
@@ -23,7 +38,10 @@ def configure(db_name):
 
 def write(message):
     if enabled:
-        logger.write(message)
+        if type(message) == str:
+            logger.write(message)
+        else:
+            logger.write_frame_info(message)
 
 def write_val(message, val):
     if enabled:
@@ -34,8 +52,12 @@ def write_arr(message, arr):
         logger.write_arr(message, arr)
 
 def write_big_arr(message, arr):
-    if enabled:
+    if False:
         logger.write_big_arr(message, arr)
+
+def write_frame_info(frame):
+    if enabled:
+        logger.write_frame_info(frame)
 
 class MongoLog():
 
@@ -91,6 +113,31 @@ class MongoLog():
                 'index': i,
                 'of': total
                 })
+
+    def write_frame_info(self, frame):
+        func_name = inspect.getframeinfo(frame).function
+        arg_vals = inspect.getargvalues(frame)
+        args = {}
+        for arg in arg_vals.args:
+            val = arg_vals.locals[arg]
+
+            # this is horrible and makes me feel sad :(
+            if type(val) == list:
+                val = np.array(val)
+            if type(val) == np.ndarray:
+                # args[arg] = val.to_list()
+                args[arg] = 'numpy array'
+            elif type(val) == syllableClassifier.syllableClassifier:
+                args[arg] = 'syllable classifier'
+            else:
+                args[arg] = val
+        self.coll.insert_one({
+            'message': func_name,
+            'function': func_name,
+            'type': 'frame_info',
+            'value': args,
+            })
+
 
     def clear(self):
         self.coll.remove({})
