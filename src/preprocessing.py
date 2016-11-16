@@ -15,7 +15,6 @@ import os
 import scipy.io.wavfile as wav
 import random
 
-import evaluation.mongolog as logger
 import inspect
 
 from python_speech_features import mfcc
@@ -33,7 +32,6 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
     7. Add derivatives
     8. Run PCA
     """
-    logger.write_frame_info(inspect.currentframe())
 
     """ Load Data """
     syllables = [files for files in os.listdir(syllable_directory)]
@@ -42,8 +40,6 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
         syllables.remove('.gitignore')
     except ValueError:
         print('not using github version...') # nothing to be done
-
-    logger.write_val('syllables available', syllables)
 
     trainDataRaw = []
     testDataRaw = []
@@ -75,26 +71,16 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                 )
     else:
         # sample random from the list of available syllables
-        old_sampling = False
-        if not old_sampling: 
-            syll_idxs = list(range(0, len(syllables)))
-            ind = sorted(np.random.choice(syll_idxs, n_syllables, replace=False))
-            for i in ind:
-                syll_idxs.remove(i)
-        else: 
-            stepsize = len(syllables) // n_syllables
-            ind = np.arange(0, stepsize * n_syllables, stepsize)
-            print(len(syllables))
-            print(n_syllables)
-            print(stepsize)
-            print(ind)
+        syll_idxs = list(range(0, len(syllables)))
+        ind = sorted(np.random.choice(syll_idxs, n_syllables, replace=False))
+        for i in ind:
+            syll_idxs.remove(i)
+
 
         for i in range(n_syllables):
-            print("i: ", i, " #######")
             success = False
             while not success:
                 try:
-                    print("trying to load ", ind[i], " -- ", syllables[ind[i]])
                     syll_path = os.path.join(syllable_directory, syllables[ind[i]])
                     # try to find a syllable that fullfills the condition of the n_train length
                     if not samples:
@@ -111,64 +97,34 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                         testDataRaw.append(
                             load_data(syll_path, n_test[i], n_train, snr=snr, sample_order=samples[i][n_train::])
                         )
-                    print("succeeded at loading ", ind[i], " -- ", syllables[ind[i]])
                     success = True
                 except Exception as err:
                     #redraw something new
-                    print(err)
-                    if not old_sampling:
-                        print(syll_idxs)
-                        new_syll = np.random.choice(syll_idxs, 1, replace=False)[0]
-                        syll_idxs.remove(new_syll)
-                        ind[i] = new_syll
-                    else:
-                        if i >= (len(ind) - 1): break;
-                        if ind[i] < ind[i+1] and ind[i] < len(syllables):
-                            ind[i] += 1
-                        else:
-                            break
-            print("###########")
-
-    logger.write_big_arr('train_data_raw', trainDataRaw)
-    logger.write_big_arr('test_data_raw', testDataRaw)
+                    new_syll = np.random.choice(syll_idxs, 1, replace=False)[0]
+                    syll_idxs.remove(new_syll)
+                    ind[i] = new_syll
 
     """ Downsampling """
 
     trainDataDS = downSample(trainDataRaw, sample_rate, ds_type)
     testDataDS = downSample(testDataRaw, sample_rate, ds_type)
 
-    logger.write_big_arr('train_data_ds', trainDataDS)
-    logger.write_big_arr('test_data_ds', testDataDS)
-
     """ MFCC extraction """
 
     trainDataMel = getMEL(trainDataDS, mel_channels, inv_coefforder)
     testDataMel = getMEL(testDataDS, mel_channels, inv_coefforder)
 
-    logger.write_big_arr('train_data_mel', trainDataMel)
-    logger.write_big_arr('test_data_mel', testDataMel)
-
-
     """ shift and scale both datasets according to properties of training data """
 
     shifts, scales = getShiftsAndScales(trainDataMel)
 
-    logger.write_arr('shifts', shifts)
-    logger.write_arr('scales', scales)
-
     trainDataNormalized = normalizeData(trainDataMel, shifts, scales)
     testDataNormalized = normalizeData(testDataMel, shifts, scales)
-
-    logger.write_big_arr('train_data_normalized', trainDataNormalized)
-    logger.write_big_arr('test_data_normalized', testDataNormalized)
 
     """ Interpolate datapoints so that each sample has only (smoothLength) timesteps """
 
     trainDataSmoothend = smoothenData(trainDataNormalized, smooth_length, poly_order, mel_channels)
     testDataSmoothend = smoothenData(testDataNormalized, smooth_length, poly_order, mel_channels)
-
-    logger.write_big_arr('train_data_smoothed', trainDataSmoothend)
-    logger.write_big_arr('test_data_smoothed', testDataSmoothend)
 
     """ Include first and second derivatives of mfcc """
 
@@ -177,9 +133,6 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     trainDataFinal = trainDataDer
     testDataFinal = testDataDer
-
-    logger.write_big_arr('train_data_final', trainDataFinal)
-    logger.write_big_arr('test_data_final', testDataFinal)
 
     out = {
         'train_data': trainDataFinal,
@@ -211,16 +164,12 @@ def load_data(syllable, N, used_samples, snr, sample_order = None):
     
     :returns syllable_waves: list of N sample waves of syllable
     """
-    logger.write_frame_info(inspect.currentframe())
 
-    logger.write_val('load syllable files', syllable)
     samples = [files for files in os.listdir(syllable)]
-    logger.write_val('files found', samples)
     syllable_waves = []
     if sample_order is None:
         for i in range(int(N)):
             rate, wave = wav.read(syllable + '/' + samples[i + used_samples])
-
             if (snr != 0.0):
                 noiseLvl = np.sqrt(np.var(wave) / snr)
             else:
@@ -251,8 +200,6 @@ def zeroPad(data):
     :returns syllables: list with same number of entries as data, but with zero
                         padded arrays
     """
-    logger.write_frame_info(inspect.currentframe())
-
     max_length = 0
     syllables = []
 
@@ -283,7 +230,6 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
     :returns syllables: downsampled data, in same format as input data
     """
 
-    logger.write_frame_info(inspect.currentframe())
     syllables = []
     for syllable in data:
         samples = []
@@ -317,7 +263,6 @@ def getMEL(data, n_mfcc = 12, invCoeffOrder = False, winsize = 20, frames = 64):
     :returns syllables: list with mfccs for n_mfcc mel channels for each sample of each syllable
     """
 
-    logger.write_frame_info(inspect.currentframe())
     syllables = []
     i = 0
     for syllable in data:
@@ -356,7 +301,6 @@ def getShiftsAndScales(data):
     :returns scales: 1 / (maximum mfcc - minimum mfcc) for each of the 12 channels (vector of length 12)
     """
 
-    logger.write_frame_info(inspect.currentframe())
     if len(data) == 0:
         return 0, 0
 
@@ -381,7 +325,6 @@ def normalizeData(data, shifts, scales):
     :returns newData: list of normalized data
     """
 
-    logger.write_frame_info(inspect.currentframe())
     newData = []
     for syllable_i, syllable in enumerate(data):
         newData.append([])
@@ -404,7 +347,6 @@ def smoothenData(data, smoothLength, polyOrder, channelsN):
     :returns newData: smoothend and downsampled data
     """
 
-    logger.write_frame_info(inspect.currentframe())
     newData = []
     for syllable in data:
         newSyllable = []
@@ -433,7 +375,6 @@ def runPCA(data, n):
     :returns dataRed: Dimensionality reduced list
     """
 
-    logger.write_frame_info(inspect.currentframe())
     if n > data[0][0].shape[1]:
         raise ValueError('Number of PCs to use exceeds dimensionality of the data')
 
@@ -470,7 +411,6 @@ def mfccDerivates(data, Der1 = True, Der2 = True):
     :return devdata: MFCC data including derivatives
     """
 
-    logger.write_frame_info(inspect.currentframe())
     if not Der1:
         return data
     if Der1:

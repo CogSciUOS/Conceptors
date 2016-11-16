@@ -21,15 +21,10 @@ import preprocessing
 import numpy as np
 import random
 
-import evaluation.mongolog as logger
-logger.configure('new')
-
 # set random seeds for both numpy and random
 SEED = 42
 np.random.seed(SEED)
 random.seed(SEED)
-
-logger.write_val("starting with seed", SEED)
 
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
@@ -44,7 +39,6 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
     """
-    logger.write_frame_info(inspect.currentframe())
     path = os.path.abspath(path)
 
     """ assign parameters """
@@ -69,38 +63,21 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'inp_scale': inpScale,
         'conn': conn}
 
-    logger.write_val('prep params', prepParams)
-    logger.write_val('conceptor params', clearnParams)
-
     performances = []
     evidences = []
 
     for i in range(cvalRuns):
 
-        logger.write_val('start cross validation run', i)
         syllClass = sC.syllableClassifier(**clearnParams)
 
         samples = []
         n_test = np.random.random_integers(10, 50, syllN)
-        # n_test = [15, 15, 26, 46, 41, 43, 48, 19, 16, 28, 14, 18, 10, 35, 13, 10, 10, 29, 22, 30, 15, 13, 50, 15, 11, 29, 30, 23, 14, 45]
-
-        logger.write_arr("n_test", n_test)
 
         """ Get and preprocess data """
-        logger.write('start preprocessing')
         data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
-        logger.write('end preprocessing')
-
-        logger.write('start learning')
         # reinitialize syllable classifier
         syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
-        logger.write('end learning')
-
-        logger.write('start testing')
         results = syllClass.cTest(data['test_data'])
-        logger.write('end testing')
-
-        logger.write_arr("results", results)
 
         evidences.append(results['evidences'])
         performances.append(results['class_perf'])
@@ -375,6 +352,12 @@ parser.add_argument(
     type=list,
     help='List of names of syllables to be used'
 )
+parser.add_argument(
+    '--snr',
+    type=float,
+    default=0.0,
+    help='signal to noise ratio in the syllable data'
+)
 
 
 """ Run script via command window """
@@ -385,32 +368,15 @@ except:
     sys.exit(0)
 
 perf = []
+numSyllRange = [2]
 
-#noiseRange = [4, 2, 1, 0.5, 0.25, 0.125, 0.0]
-snrRange = [0.0]
-#numSyllRange = np.arange(20, 31, 5).tolist()
-numSyllRange = [4]
-
-perf_points = np.empty([3, len(snrRange) * len(numSyllRange)])
-
-for snr in snrRange:
-    for numSyll in numSyllRange:
-        cval_perc = 0
-        perf_val = 0
-        # try:
-        cval_perc = runSyllClass(path=args.path, syllN=numSyll, trainN=args.trainN, cvalRuns=args.cvalRuns,
+cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
             sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
             invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
             smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
             specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-            gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=snr)
-        print(cval_perc)
-        perf_val = np.mean(cval_perc, axis=0)[2]
-        # except Exception as err:
-        #     print(str(snr) + ' and ' + str(numSyll) + ' have not been working...')
-        #     print(err)
+            gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=args.snr)
 
-        perf.append(perf_val)
-        print(perf_val)
-
-print(perf)
+print(cval_perc)
+perf_val = np.mean(cval_perc, axis=0)[2]
+print(perf_val)
