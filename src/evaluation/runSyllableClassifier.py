@@ -389,7 +389,7 @@ perf = []
 #noiseRange = [4, 2, 1, 0.5, 0.25, 0.125, 0.0]
 snrRange = [0.0]
 #numSyllRange = np.arange(20, 31, 5).tolist()
-numSyllRange = [20]
+numSyllRange = [4]
 
 perf_points = np.empty([3, len(snrRange) * len(numSyllRange)])
 

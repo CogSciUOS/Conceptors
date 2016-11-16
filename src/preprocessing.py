@@ -75,18 +75,19 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                 )
     else:
         # sample random from the list of available syllables
-        """
-        syll_idxs = list(range(0, len(syllables)))
-        ind = sorted(np.random.choice(syll_idxs, n_syllables, replace=False))
-        for i in ind:
-            syll_idxs.remove(i)
-        """
-        stepsize = len(syllables) // n_syllables
-        ind = np.arange(0, stepsize * n_syllables, stepsize)
-        print(len(syllables))
-        print(n_syllables)
-        print(stepsize)
-        print(ind)
+        old_sampling = False
+        if not old_sampling: 
+            syll_idxs = list(range(0, len(syllables)))
+            ind = sorted(np.random.choice(syll_idxs, n_syllables, replace=False))
+            for i in ind:
+                syll_idxs.remove(i)
+        else: 
+            stepsize = len(syllables) // n_syllables
+            ind = np.arange(0, stepsize * n_syllables, stepsize)
+            print(len(syllables))
+            print(n_syllables)
+            print(stepsize)
+            print(ind)
 
         for i in range(n_syllables):
             print("i: ", i, " #######")
@@ -115,17 +116,17 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                 except Exception as err:
                     #redraw something new
                     print(err)
-                    """
-                    print(syll_idxs)
-                    new_syll = np.random.choice(syll_idxs, 1, replace=False)[0]
-                    syll_idxs.remove(new_syll)
-                    ind[i] = new_syll
-                    """
-                    if i >= (len(ind) - 1): break;
-                    if ind[i] < ind[i+1] and ind[i] < len(syllables):
-                        ind[i] += 1
+                    if not old_sampling:
+                        print(syll_idxs)
+                        new_syll = np.random.choice(syll_idxs, 1, replace=False)[0]
+                        syll_idxs.remove(new_syll)
+                        ind[i] = new_syll
                     else:
-                        break
+                        if i >= (len(ind) - 1): break;
+                        if ind[i] < ind[i+1] and ind[i] < len(syllables):
+                            ind[i] += 1
+                        else:
+                            break
             print("###########")
 
     logger.write_big_arr('train_data_raw', trainDataRaw)
