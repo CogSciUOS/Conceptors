@@ -274,7 +274,6 @@ parser.add_argument(
 )
 parser.add_argument(
     '--smoothL',
-    # default=5,
     default=5,
     type=int,
     help='Desired length of the smoothed mfcc data (default = 4)'
@@ -366,9 +365,6 @@ try:
     args = parser.parse_args()
 except:
     sys.exit(0)
-
-perf = []
-numSyllRange = [2]
 
 cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
             sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
