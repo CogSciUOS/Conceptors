@@ -28,7 +28,7 @@ reinitialize it or pass it as an argument
 '''
 logger = None
 
-enabled = True
+enabled = False
 
 def configure(db_name):
     if enabled:

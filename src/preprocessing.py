@@ -75,15 +75,25 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                 )
     else:
         # sample random from the list of available syllables
+        """
         syll_idxs = list(range(0, len(syllables)))
         ind = sorted(np.random.choice(syll_idxs, n_syllables, replace=False))
         for i in ind:
             syll_idxs.remove(i)
+        """
+        stepsize = len(syllables) // n_syllables
+        ind = np.arange(0, stepsize * n_syllables, stepsize)
+        print(len(syllables))
+        print(n_syllables)
+        print(stepsize)
+        print(ind)
 
         for i in range(n_syllables):
+            print("i: ", i, " #######")
             success = False
             while not success:
                 try:
+                    print("trying to load ", ind[i], " -- ", syllables[ind[i]])
                     syll_path = os.path.join(syllable_directory, syllables[ind[i]])
                     # try to find a syllable that fullfills the condition of the n_train length
                     if not samples:
@@ -100,12 +110,23 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                         testDataRaw.append(
                             load_data(syll_path, n_test[i], n_train, snr=snr, sample_order=samples[i][n_train::])
                         )
+                    print("succeeded at loading ", ind[i], " -- ", syllables[ind[i]])
                     success = True
-                except:
+                except Exception as err:
                     #redraw something new
-                    new_syll = np.random.choice(syll_idxs, 1, replace=False)
+                    print(err)
+                    """
+                    print(syll_idxs)
+                    new_syll = np.random.choice(syll_idxs, 1, replace=False)[0]
                     syll_idxs.remove(new_syll)
                     ind[i] = new_syll
+                    """
+                    if i >= (len(ind) - 1): break;
+                    if ind[i] < ind[i+1] and ind[i] < len(syllables):
+                        ind[i] += 1
+                    else:
+                        break
+            print("###########")
 
     logger.write_big_arr('train_data_raw', trainDataRaw)
     logger.write_big_arr('test_data_raw', testDataRaw)

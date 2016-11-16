@@ -254,8 +254,8 @@ parser.add_argument(
 )
 parser.add_argument(
     '--cvalRuns',
-    # default=2,
-    default=1,
+    default=2,
+    # default=5,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -389,7 +389,7 @@ perf = []
 #noiseRange = [4, 2, 1, 0.5, 0.25, 0.125, 0.0]
 snrRange = [0.0]
 #numSyllRange = np.arange(20, 31, 5).tolist()
-numSyllRange = [2]
+numSyllRange = [20]
 
 perf_points = np.empty([3, len(snrRange) * len(numSyllRange)])
 
