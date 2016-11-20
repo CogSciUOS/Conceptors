@@ -108,7 +108,7 @@ def main(args):
         print(i+1,'. run of ',nRuns,' runs is finished.')
         i += 1
 
-    json.dump({'netSR': netsr, 'bias_scale': bias_scale, 'inp_scale': inp_scale, 'performance': np.mean(performance), 'variance': np.mean(variance)}, 'loadFailed': failed, open(targetDir + '/results.json','w'))
+    json.dump({'netSR': netsr, 'bias_scale': bias_scale, 'inp_scale': inp_scale, 'performance': np.mean(performance), 'variance': np.mean(variance), 'loadFailed': failed}, open(targetDir + '/results.json','w'))
 
 if __name__ == "__main__":
     main(sys.argv)
