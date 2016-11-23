@@ -1,6 +1,6 @@
 """ Libraries """
 
-from matplotlib.pyplot import *
+#from matplotlib.pyplot import *
 import os
 import argparse
 import sys
@@ -22,7 +22,7 @@ import numpy as np
 import random
 
 # set random seeds for both numpy and random
-SEED = 42
+SEED = 100
 np.random.seed(SEED)
 random.seed(SEED)
 
@@ -34,7 +34,7 @@ warnings.filterwarnings("ignore", category=np.ComplexWarning)
 
 def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, invCoeffOrder, winsize, melFramesN,
         smoothL, polyOrder, incDer, resN, specRad, biasScale, inpScale, conn, gammaPos, gammaNeg, plotExample,
-        snr):
+        snr = 0.0):
     """
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
@@ -220,19 +220,18 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=2,
+    default=10,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '--trainN',
-    default=30,
+    default=20,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=2,
-    # default=5,
+    default=5,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
