@@ -6,6 +6,8 @@ import numpy as np
 import reservoirConceptor as c
 import functions as fct
 
+import inspect
+
 
 class syllableClassifier:
     __slots__ = (
@@ -45,7 +47,8 @@ class syllableClassifier:
             3. gamma_pos:   aperture of the positive conceptors (default = 25)
             4. gamma_neg:   aperture of the negative conceptors (default = 27)
         """
-        
+        self.c_pos = []
+
         # loop over syllables
         for syllable in np.array(train_data):
             R_syll = np.zeros((syllable.shape[1] * (self.size + syllable.shape[2]), syllable.shape[0]))
@@ -60,7 +63,9 @@ class syllableClassifier:
             R = np.dot(R_syll, R_syll.T) / n_train
             C_tmp = np.dot(R, np.linalg.inv(R + np.eye(len(R))))
             self.c_pos.append(C_tmp)
-        
+
+        self.c_neg =[]
+
         # calculate preliminary negative conceptor for each positive conceptor
         for i in range(len(self.c_pos)):
             C = np.zeros_like(self.c_pos[0])
@@ -149,9 +154,9 @@ class syllableClassifier:
                 h_comb.append(h_comb_tmp)
                 
                 # check for which syllables evidences are maximal at each timepoint
-                dec_pos = np.where(h_pos_tmp == np.max(h_pos_tmp))[0][0]
-                dec_neg = np.where(h_neg_tmp == np.max(h_neg_tmp))[0][0]
-                dec_comb = np.where(h_comb_tmp == np.max(h_comb_tmp))[0][0]
+                dec_pos = np.argmax(h_pos_tmp)
+                dec_neg = np.argmax(h_neg_tmp)
+                dec_comb = np.argmax(h_comb_tmp)
                 
                 # calculate classification performance
                 classification_pos_tmp = 1 if dec_pos == syll_i else 0
