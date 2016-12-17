@@ -84,12 +84,15 @@ class Reservoir:
                     uColl[:,t-self.t_wash] = u                    
             
             if not gradient_c:
-            
-                R = np.dot(xColl,np.transpose(xColl))/self.t_learn
-                U,S,V = np.linalg.svd(R, full_matrices=True)  
-                S = np.diag(S)      
-                S = (np.dot(S,np.linalg.inv(S + (self.alpha**-2)*I)))
-                self.C.append(np.dot(U,np.dot(S,U.T)))        
+
+                try:
+                    R = np.dot(xColl,np.transpose(xColl))/self.t_learn
+                    U,S,V = np.linalg.svd(R, full_matrices=True)
+                    S = np.diag(S)
+                    S = (np.dot(S,np.linalg.inv(S + (self.alpha**-2)*I)))
+                    self.C.append(np.dot(U,np.dot(S,U.T)))
+                except:
+                    print("SVD did not converge")
                 
             else:
                 

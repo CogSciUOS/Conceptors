@@ -1,9 +1,8 @@
 """ Libraries """
 
-from matplotlib.pyplot import *
+#from matplotlib.pyplot import *
 import os
 import argparse
-import pickle
 import sys
 
 """
@@ -23,23 +22,23 @@ import numpy as np
 import random
 
 # set random seeds for both numpy and random
-np.random.seed(255)
-random.seed(255)
+SEED = 100
+np.random.seed(SEED)
+random.seed(SEED)
 
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
-
+warnings.filterwarnings("ignore", category=np.ComplexWarning)
 
 """ Function """
 
 def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, invCoeffOrder, winsize, melFramesN,
         smoothL, polyOrder, incDer, resN, specRad, biasScale, inpScale, conn, gammaPos, gammaNeg, plotExample,
-        syll_names=['as','bl','ck','dm','el']):
+        snr = 0.0):
     """
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
     """
-
     path = os.path.abspath(path)
 
     """ assign parameters """
@@ -53,8 +52,8 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'frames': melFramesN,
         'smooth_length': smoothL,
         'inc_der': incDer,
-        'poly_order': polyOrder
-        #'syll_names': syll_names
+        'poly_order': polyOrder,
+        'snr': snr
     }
 
     clearnParams = {
@@ -64,23 +63,15 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         'inp_scale': inpScale,
         'conn': conn}
 
-    syllClass = sC.syllableClassifier(**clearnParams)
-
     performances = []
     evidences = []
 
     for i in range(cvalRuns):
 
+        syllClass = sC.syllableClassifier(**clearnParams)
+
         samples = []
         n_test = np.random.random_integers(10, 50, syllN)
-
-        for j in range(syllN):
-            indices = np.arange(0, trainN + n_test[j], 1)
-            ind_tmp = indices.copy().tolist()
-            random.shuffle(ind_tmp)
-            ind_tmp = np.array(ind_tmp)
-
-            samples.append(ind_tmp)
 
         """ Get and preprocess data """
         data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
@@ -96,6 +87,8 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     """ Plotting """
     if plotExample:
         plot_results(data, cval_results, evidences, cvalRuns)
+
+    return cval_results
 
 
 def plot_results(data, cval_results, evidences, cvalRuns):
@@ -227,18 +220,18 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=5,
+    default=10,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '--trainN',
-    default=30,
+    default=20,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=2,
+    default=5,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -256,13 +249,14 @@ parser.add_argument(
 )
 parser.add_argument(
     '--mfccN',
-    default=20,
+    # default=20,
+    default=25,
     type=int,
     help='Number of mel frequency cepstral coefficients to extract for each mel frame (default = 25, which is the maximum possible)'
 )
 parser.add_argument(
     '--invCoeffOrder',
-    default=True,
+    default=False,
     help='Boolean, if true: Extract last n mfcc instead of first n (default = False)'
 )
 parser.add_argument(
@@ -297,6 +291,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--resN',
+    # default=20,
     default=10,
     type=int,
     help='Size of the reservoir to be used for conceptor learning (default = 10)'
@@ -304,6 +299,7 @@ parser.add_argument(
 parser.add_argument(
     '--specRad',
     default=1.1,
+    # default=1.2,
     type=float,
     help='Spectral radius of the connectivity matrix of the reservoir (default = 1.2)'
 )
@@ -339,7 +335,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--plotExample',
-    default=True,
+    default=False,
     help='If true, plot raw & preprocessed mfcc data as well as conceptor evidences (default = False)'
 )
 parser.add_argument(
@@ -354,27 +350,27 @@ parser.add_argument(
     type=list,
     help='List of names of syllables to be used'
 )
+parser.add_argument(
+    '--snr',
+    type=float,
+    default=0.0,
+    help='signal to noise ratio in the syllable data'
+)
 
 
 """ Run script via command window """
 # can be also run using an IDE, but uses the default parameters then
 try:
     args = parser.parse_args()
-    print(args)
 except:
     sys.exit(0)
 
-runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
-             sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
-             invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
-             smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
-             specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-             gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample
-             )
+cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
+            sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
+            invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
+            smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
+            specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
+            gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=args.snr)
 
-# output = [results, args]
-#
-# if not args.targetDir:
-#     pickle.dump(output, open('Results.pkl', 'wb'))
-# else:
-#     pickle.dump(output, open(os.path.abspath(args.targetDir + '/' + 'Results.pkl'), 'wb'))
+perf_val = np.mean(cval_perc, axis=0)[2]
+print(perf_val)

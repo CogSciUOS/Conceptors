@@ -8,16 +8,19 @@ import numpy.polynomial.polynomial as poly
 import scipy as sp
 import scipy.interpolate
 import scipy.signal as ss
+import scipy.stats as stat
 import math
 import sklearn.decomposition as sd
 import os
 import scipy.io.wavfile as wav
 import random
 
+import inspect
+
 from python_speech_features import mfcc
 
 def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds_type, mel_channels, inv_coefforder,
-               winsize, frames, smooth_length, poly_order, inc_der, syll_names=None, samples=None):
+               winsize, frames, smooth_length, inc_der, poly_order, snr, syll_names=None, samples=None):
     """
     Function that performs the following preprocessing steps on data in file:
     1. loading
@@ -31,9 +34,12 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
     """
 
     """ Load Data """
-
     syllables = [files for files in os.listdir(syllable_directory)]
-    #syllables.remove('.gitignore')
+
+    try:
+        syllables.remove('.gitignore')
+    except ValueError:
+        print('not using github version...') # nothing to be done
 
     trainDataRaw = []
     testDataRaw = []
@@ -51,21 +57,25 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
             if not samples:
                 trainDataRaw.append(
-                    load_data(syll_path, n_train, 0)
+                    load_data(syll_path, n_train, 0, snr=0)
                 )
                 testDataRaw.append(
-                    load_data(syll_path, n_test[i], n_train)
+                    load_data(syll_path, n_test[i], n_train, snr=snr)
                 )
             else:
                 trainDataRaw.append(
-                    load_data(syll_path, n_train, 0, sample_order=samples[i][0:n_train])
+                    load_data(syll_path, n_train, 0, snr=0, sample_order=samples[i][0:n_train])
                 )
                 testDataRaw.append(
-                    load_data(syll_path, n_test[i], n_train, sample_order=samples[i][n_train::])
+                    load_data(syll_path, n_test[i], n_train, snr=snr, sample_order=samples[i][n_train::])
                 )
     else:
         # sample random from the list of available syllables
-        ind = np.random.choice(range(1, len(syllables)), n_syllables, replace=False)
+        syll_idxs = list(range(0, len(syllables)))
+        ind = sorted(np.random.choice(syll_idxs, n_syllables, replace=False))
+        for i in ind:
+            syll_idxs.remove(i)
+
 
         for i in range(n_syllables):
             success = False
@@ -75,26 +85,24 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                     # try to find a syllable that fullfills the condition of the n_train length
                     if not samples:
                         trainDataRaw.append(
-                            load_data(syll_path, n_train, 0)
+                            load_data(syll_path, n_train, 0, 0)
                         )
                         testDataRaw.append(
-                            load_data(syll_path, n_test[i], n_train)
+                            load_data(syll_path, n_test[i], n_train, snr=snr)
                         )
                     else:
                         trainDataRaw.append(
-                            load_data(syll_path, n_train, 0, sample_order=samples[i][0:n_train])
+                            load_data(syll_path, n_train, 0, 0, sample_order=samples[i][0:n_train])
                         )
                         testDataRaw.append(
-                            load_data(syll_path, n_test[i], n_train, sample_order=samples[i][n_train::])
+                            load_data(syll_path, n_test[i], n_train, snr=snr, sample_order=samples[i][n_train::])
                         )
                     success = True
-                except:
-                    skipped_syllables.append(syllables[ind[i]])
-                    if i >= (len(ind) - 1): break
-                    if ind[i] < ind[i + 1] and ind[i] < len(syllables):
-                        ind[i] += 1
-                    else:
-                        break
+                except Exception as err:
+                    #redraw something new
+                    new_syll = np.random.choice(syll_idxs, 1, replace=False)[0]
+                    syll_idxs.remove(new_syll)
+                    ind[i] = new_syll
 
     """ Downsampling """
 
@@ -145,12 +153,13 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     return out
 
-def load_data(syllable, N, used_samples, sample_order = None):
+def load_data(syllable, N, used_samples, snr, sample_order = None):
     """Function that goes through all N samples of syllable and loads its wave data.
     
     :param syllable: complete path name of syllable (string)
     :param N: number of samples to load
     :param used_samples: number of samples to skip in the beginning
+    :param snr: the strength of the noise
     :param sample_order: if not None should be vector of indices of samples to be loaded (default = None)
     
     :returns syllable_waves: list of N sample waves of syllable
@@ -161,11 +170,20 @@ def load_data(syllable, N, used_samples, sample_order = None):
     if sample_order is None:
         for i in range(int(N)):
             rate, wave = wav.read(syllable + '/' + samples[i + used_samples])
+            if (snr != 0.0):
+                noiseLvl = np.sqrt(np.var(wave) / snr)
+            else:
+                noiseLvl = 0.0
+            wave = wave + noiseLvl * np.random.randn(len(wave))
             syllable_waves.append([wave,rate])
     else:
         for i in sample_order:
             rate, wave = wav.read(syllable + '/' + samples[i])
-            if wave.size == 0: print(i, samples[i])
+            if(snr != 0.0):
+                noiseLvl = np.sqrt(np.var(wave) / snr)
+            else:
+                noiseLvl = 0.0
+            wave = wave + noiseLvl * np.random.randn(len(wave))
             syllable_waves.append([wave,rate])
     return syllable_waves
 
@@ -182,7 +200,6 @@ def zeroPad(data):
     :returns syllables: list with same number of entries as data, but with zero
                         padded arrays
     """
-
     max_length = 0
     syllables = []
 
@@ -222,8 +239,9 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
                 pad_size = int(math.ceil(float(sample[0].size)/SR)*SR - sample[0].size)
                 s_padded = np.append(sample[0], np.zeros(pad_size)*np.NaN)
                 s_new = sp.nanmean(s_padded.reshape(-1,SR), axis=1)
-            elif dsType == 'FIR':
-                s_new = ss.decimate(sample[0],SR)
+            # elif dsType == 'FIR':
+            elif dsType == 'IIR':
+                s_new = ss.decimate(sample[0],int(SR))
             samples.append([s_new, sampleRate])
         syllables.append(samples)
     return syllables
@@ -235,13 +253,13 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
 def getMEL(data, n_mfcc = 12, invCoeffOrder = False, winsize = 20, frames = 64):
     """ Function that goes through all samples of each syllable and extracts the
         mfccs for the 12 mel frequency channels.
-        
+
     :param data: list of syllables with sample data
     :param n_mfcc: number of mel frequency cepstral coefficients to return (default = 12)
     :param invCoeffOrder: if True, extract last n mfcc instead of first n (default = False)
     :param wisize: size of the time window used for mfcc extraction
     :param frames: desired number of time frames in final mfcc data
-    
+
     :returns syllables: list with mfccs for n_mfcc mel channels for each sample of each syllable
     """
 
@@ -370,13 +388,6 @@ def runPCA(data, n):
             else:
                 train = np.concatenate((train,samp), axis = 0)
 
-        #R = np.dot(train.T, train)
-        #eigvals, eigvecs = np.linalg.eig(R)
-        #pcs = eigvecs * eigvals
-        #ind = np.squeeze(np.fliplr(np.array(np.argsort(eigvals), ndmin = 2)))
-        #print(ind)
-        #print(eigvals)
-        #comps = np.squeeze(pcs[:,ind])
         model = sd.PCA(n_components = n)
         results = model.fit(train)
         comps = results.components_.T
