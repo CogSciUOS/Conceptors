@@ -88,7 +88,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     if plotExample:
         plot_results(data, cval_results, evidences, cvalRuns)
 
-    return cval_results * 100. #returns the results of the conceptors in percentage
+    return cval_results
 
 
 def plot_results(data, cval_results, evidences, cvalRuns):
@@ -372,6 +372,5 @@ cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, c
             specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
             gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=args.snr)
 
-print(cval_perc)
 perf_val = np.mean(cval_perc, axis=0)[2]
 print(perf_val)
