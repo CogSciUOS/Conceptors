@@ -1,6 +1,6 @@
 """ Libraries """
 
-#from matplotlib.pyplot import *
+from matplotlib.pyplot import *
 import os
 import argparse
 import sys
@@ -85,7 +85,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     cval_results = np.array(performances)
 
     """ Plotting """
-    if plotExample:
+    if plotExample is True:
         plot_results(data, cval_results, evidences, cvalRuns)
 
     return cval_results
@@ -220,7 +220,7 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=10,
+    default=5,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
@@ -365,6 +365,7 @@ try:
 except:
     sys.exit(0)
 
+print(args)
 cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
             sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
             invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
