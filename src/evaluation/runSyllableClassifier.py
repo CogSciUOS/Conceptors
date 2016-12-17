@@ -220,7 +220,7 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=10,
+    default=5,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
