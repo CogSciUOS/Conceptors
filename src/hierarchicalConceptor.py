@@ -74,6 +74,8 @@ class Hierarchical:
                     cl_inp = np.reshape(p(t), self.RFC.n_ip_dim)
 
                 inp    = cl_inp + noiseLVL*np.random.randn(self.RFC.n_ip_dim)
+                inp    = inp - min(inp)
+                inp    = inp / max(inp)
 
                 for l in range(self.M):
 
@@ -128,13 +130,32 @@ class Hierarchical:
             self.outp_colls.append(copy.copy(outp_coll))
             self.cl_inp_colls.append(copy.copy(cl_inp_coll))
 
+        self.class_predictions = self.gammaColl.argmax(axis = 1)
+
     def plot_tau(self):
 
         figure()
         xspace = [np.linspace(0,self.pattTimesteps[i],self.pattTimesteps[i]) for i in range(self.n_patts)]
         plot(xspace[1],self.tauColl[:][1,:])
         plot(xspace[2],self.tauColl[:][2,:])
-        suptitle('Taus')
+        suptitle('Taus') 
+    
+    def checkPerformance(self):
+        
+        t_all = np.sum(self.pattTimesteps)
+        xspace = np.linspace(0, t_all, t_all)
+        performance = np.zeros((self.M,self.n_patts))
+        for l in range(self.M):
+            idx = 0
+            for p in range(self.n_patts): 
+                choice = np.argmax(np.squeeze(self.gammaColl[l,:,:]), axis = 0)
+                realSongFull = np.zeros_like(xspace)
+                realSong = np.sum(self.patterns[p], axis = 1) != 0
+                realSongFull[idx:idx + len(realSong)] = realSong
+                idx += len(realSong)
+                performance[l,p] = np.mean(choice[realSongFull == 1] == p)
+        
+        return performance
 
     def plot_gamma(self, songLenghts = None):
 
@@ -143,7 +164,6 @@ class Hierarchical:
 
         # make a figure for every HFC level
         for l in range(self.M):
-            figure()
 
             # plot gamma and play-area for all patterns
             for p_idx, p in enumerate(self.patterns):
@@ -154,38 +174,69 @@ class Hierarchical:
 
                 # plot gamma values for this song
                 gamma_plot = plot(xspace, self.gammaColl[l, p_idx, :].T,
-                    label = 'Gamma of pattern {}'.format(p_idx))
+                    label = 'Gamma of song {}'.format(p_idx))
 
                 # show areas where the song was played
                 pattern_not_empty = p.any(axis = 1)
-                fill_between(np.arange(start_idx, end_idx), 0, 1,
+                fill_between(np.arange(start_idx, end_idx), -0.2, 0,
                     where = pattern_not_empty,
                     facecolor = gamma_plot[0].get_color(),
                     alpha = 0.2,
-                    label = 'Pattern {}'.format(p_idx))
+                    label = 'Song {}'.format(p_idx),
+                    linewidth = 0,
+                    )
 
                 # plot lines after every single song iteration
                 if songLenghts:
                     for i in range(start_idx, end_idx):
-                        if i % songLenghts[p_idx] == 0:
-                            axvline(i, color = 'black', alpha = 0.2)
+                        if (i-start_idx) % songLenghts[p_idx] == 0:
+                            axvline(i, ymin=0, ymax=1, color = 'black', alpha = 0.2)
 
-            # plot desriptions
-            xlabel('timesteps')
+                # plot class predictions
+                this_pattern_prediction = self.class_predictions[l] == p_idx
+                fill_between(xspace, 0, 1,
+                    where = this_pattern_prediction,
+                    facecolor = gamma_plot[0].get_color(),
+                    alpha = 0.2,
+                    linewidth = 0,
+                    )
+
+                # seperator for target and predictions
+                axhline(0, color = 'black')
+
+            # dummy plot for label for song border lines
+            plot([], [], color = 'black', alpha = 0.2, label = "Song borders (in target)")
+
+            # set y axis for gamma levels
+            ylim(-0.2, 1)
+            xlim(0, xspace[-1])
+            yticks(np.linspace(0, 1, 5), np.linspace(0, 1, 5))
             ylabel('Gamma')
-            suptitle('Gamma lvl {}'.format(l))
 
-            # place legend to bottom with dynamic offset depending on number of patterns
-            legend_offset = 0.15 + self.n_patts * 0.05
-            gcf().subplots_adjust(bottom=legend_offset)
+            # make legend (must be here, because the data belongs to standard y-axis)
             legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', borderaxespad=0.0, ncol=2)
-        show()
 
+            # switch y axis and set song labels
+            twinx()
+            ylim(-0.2, 1)
+            yticks([-0.1, 0.5], ["Target", "Predicted"])
+            ylabel('Song')
+
+            # tight layout removes layouting issues with the twinx y-axis
+            #tight_layout()
+
+            # create dynamic offset for the legend depending on number of patterns
+            legend_offset = 0.2 + self.n_patts * 0.05
+            gcf().subplots_adjust(bottom=legend_offset)
+
+        # show all figures for all hfc levels
+        show()
 
     def plot_recall(self):
 
         figure()
         for p in range(self.n_patts):
+            
             subplot(self.n_patts, 1, p+1)
 
             # convert categorical data back to syllable id or 0 if no syllable present
@@ -199,3 +250,12 @@ class Hierarchical:
             legend()
         tight_layout()
         show()
+    
+    def plot_input(self):
+        
+        for p in range(self.n_patts):
+            matshow((self.inp_colls[p]).T, cmap = 'jet', vmin = 0, vmax = 1, interpolation = 'nearest')
+            xlabel('t in steps')
+            ylabel('syllable #')
+            title('Input over time')
+            colorbar()
