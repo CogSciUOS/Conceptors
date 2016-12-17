@@ -35,7 +35,7 @@ warnings.filterwarnings("ignore", category=np.ComplexWarning)
 
 def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, invCoeffOrder, winsize, melFramesN,
         smoothL, polyOrder, incDer, resN, specRad, biasScale, inpScale, conn, gammaPos, gammaNeg, plotExample,
-        noise, syll_names=['as','bl','ck','dm','el']):
+        noise):
     """
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
@@ -97,8 +97,8 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     cval_results = np.array(performances)
 
     """ Plotting """
-    #if plotExample:
-    #    plot_results(data, cval_results, evidences, cvalRuns)
+    if plotExample:
+        plot_results(data, cval_results, evidences, cvalRuns)
 
     return cval_results * 100. #returns the results of the conceptors in percentage
 
@@ -350,7 +350,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--plotExample',
-    default=True,
+    default=False,
     help='If true, plot raw & preprocessed mfcc data as well as conceptor evidences (default = False)'
 )
 parser.add_argument(

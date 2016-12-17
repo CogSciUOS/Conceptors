@@ -151,6 +151,7 @@ def load_data(syllable, N, used_samples, noise, sample_order = None):
     :param syllable: complete path name of syllable (string)
     :param N: number of samples to load
     :param used_samples: number of samples to skip in the beginning
+    :param noise: the proportion of samples that should have noise added
     :param sample_order: if not None should be vector of indices of samples to be loaded (default = None)
     
     :returns syllable_waves: list of N sample waves of syllable
