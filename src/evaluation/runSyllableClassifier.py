@@ -206,6 +206,16 @@ def plot_results(data, cval_results, evidences, cvalRuns):
     show()
 
 
+def log_results(args, perf, trialNo, error = ''):
+    with open("log.txt", "a") as log:
+        log.write('Trial ' + str(trialNo) +':\n')
+        log.write(str(args) + '\n')
+        log.write(str(perf) + '\n')
+        if(error):
+            log.write('ERROR: ' + str(error))
+        log.write('------------------------------------------------------ \n')
+
+
 """ argument parser """
 
 parser = argparse.ArgumentParser(
@@ -357,6 +367,13 @@ parser.add_argument(
     help='signal to noise ratio in the syllable data'
 )
 
+parser.add_argument(
+    '--trial',
+    type=int,
+    default=0,
+    help='the number of the trial that is used in documenting the results'
+)
+
 
 """ Run script via command window """
 # can be also run using an IDE, but uses the default parameters then
@@ -366,12 +383,17 @@ except:
     sys.exit(0)
 
 print(args)
-cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
+perf_val = 0
+try:
+    cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
             sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
             invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
             smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
             specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
             gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=args.snr)
+    perf_val = np.mean(cval_perc, axis=0)[2]
+except all:
+    log_results(args, perf_val, args.trial, e = sys.exc_info()[0])
+    raise
 
-perf_val = np.mean(cval_perc, axis=0)[2]
-print(perf_val)
+log_results(args, perf_val, args.trial)
