@@ -206,11 +206,11 @@ def plot_results(data, cval_results, evidences, cvalRuns):
     show()
 
 
-def log_results(args, perf, trialNo, error = ''):
-    with open("log.txt", "a") as log:
+def log_results(path, args, perf, trialNo, error = ''):
+    with open(path+"log.txt", "a") as log:
         log.write('Trial ' + str(trialNo) +':\n')
         log.write(str(args) + '\n')
-        log.write(str(perf) + '\n')
+        log.write('Mean Perf: '+str(perf) + '\n')
         if(error):
             log.write('ERROR: ' + str(error))
         log.write('------------------------------------------------------ \n')
@@ -374,6 +374,14 @@ parser.add_argument(
     help='the number of the trial that is used in documenting the results'
 )
 
+parser.add_argument(
+    '--logPath',
+    type=str,
+    default='',
+    help='the directory the logfile should be written to'
+)
+
+
 
 """ Run script via command window """
 # can be also run using an IDE, but uses the default parameters then
@@ -393,7 +401,7 @@ try:
             gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=args.snr)
     perf_val = np.mean(cval_perc, axis=0)[2]
 except all:
-    log_results(args, perf_val, args.trial, e = sys.exc_info()[0])
+    log_results(args.logPath, args, perf_val, args.trial, e = sys.exc_info()[0])
     raise
 
-log_results(args, perf_val, args.trial)
+log_results(args.logPath, args, perf_val, args.trial)
