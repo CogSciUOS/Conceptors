@@ -53,13 +53,6 @@ HFCParams = {'sigma': 0.82,
 syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej','fa','ff','ha','hk']
 
 # list of songs to train RFC on
-#songs = [['aa','bm','ck'],
-#         ['ao','da','ao','ej'],
-#         ['ba','ck','ck','dl','ao'],
-#         ['da','ff','ff'],
-#         ['ba','ba','fa','fa'],
-#         ['dl','ba','dl','ba','bm'],
-#         ['hk','aa','da','hk']]
 songs = [['aa','bm','aa','ck'],
          ['da','ck','aa','ck'],
          ['dl','ea','ej','ca'],
@@ -70,11 +63,19 @@ songs = [['aa','bm','aa','ck'],
          ['ca','ff','hk','dl'],
          ['aa','ao','ba','bm'],
          ['ca','ck','da','dl'],
-         ['ea','ej','fa','ff'],
-         ['bm','hk','hk','bm']]
+         ['ea','ej','fa','ff','ej'],
+         ['bm','hk','hk','bm','ca'],
+         ['dl','ba','dl','ba','bm'],
+         ['ba','ck','ck','dl','ao'],
+         ['ea','ao','ea','ao','aa'],
+         ['aa','bm','ck'],
+         ['da','ff','ff'],
+         ['ff','ck','ck'],
+         ['hk','ao','hk'],
+         ['ej','dl','ba']]
         
 nSongs = 4
-nRuns = 30
+nRuns = 50
 nComb = np.sum(np.arange(1,nSongs))
 
 #%% learn song conceptors and compare their similarity to the similarity of the actual songs
@@ -86,20 +87,22 @@ idx = np.arange(0,len(songs))
 
 for r in range(nRuns):
     
-    np.random.shuffle(idx)
     #%% learn song conceptors
     
-    SC = SongClassifier(syllables, verbose = True)
-    
-    for n in range(nSongs):
-        SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
-    
-    try:
-        SC.loadSongs(useSyllRecog = True, SyllPath ='D:/Data/Projects/StudyProject/syll',RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
-    except:
-        r -= 1
-        continue
-
+    while True:
+        
+        SC = SongClassifier(syllables, verbose = True)
+        
+        np.random.shuffle(idx)
+        for n in range(nSongs):
+            SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
+        
+        try:
+            SC.loadSongs(useSyllRecog = True, SyllPath ='D:/Data/Projects/StudyProject/syll',RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
+            break
+        except:
+            print('loading songs failed, next try...')
+            
     #%% generate sequences of syllables according to songs 
     
     nFeatures = dataPrepParams['mel_channels'] * (1 + np.sum(dataPrepParams['inc_der']))
@@ -160,8 +163,6 @@ ylabel('Similarity of Conceptors')
 title('Correlation between SongSimilarity and ConceptorSimilarity')
 
 figure()
-xEucl = (xEucl - np.mean(xEucl))/np.var(xEucl)
-yEucl = (yEucl - np.mean(yEucl))/np.var(yEucl)
 scatter(xEucl,yEucl)
 xlabel('Similarity of Songs')
 ylabel('Similarity of Conceptors')
