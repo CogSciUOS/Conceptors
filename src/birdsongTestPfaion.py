@@ -2,6 +2,8 @@
 This class is used to run the SongClassifier with randomly generated
 syllable sequences.
 """
+import matplotlib
+matplotlib.use('qt5agg')
 from songClassifier import *
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
@@ -117,6 +119,8 @@ def plot_gamma(self, songLenghts = None):
         yticks(np.linspace(0, 1, 5), np.linspace(0, 1, 5))
         ylabel('Gamma')
 
+        xlabel('Time (in syllables)')
+
         # make legend (must be here, because the data belongs to standard y-axis)
         legend(bbox_to_anchor=(0.5, -0.15), loc='upper center', borderaxespad=0.0, ncol=2)
 
@@ -128,9 +132,6 @@ def plot_gamma(self, songLenghts = None):
         gcf().subplots_adjust(bottom=legend_offset)
 
     # show all figures for all hfc levels
-    xticks([])
-    xticks([])
-    gca().axis('off')
     savefig('song_gamma.png')
     show()
 
