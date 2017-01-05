@@ -34,7 +34,7 @@ warnings.filterwarnings("ignore", category=np.ComplexWarning)
 
 def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, invCoeffOrder, winsize, melFramesN,
         smoothL, polyOrder, incDer, resN, specRad, biasScale, inpScale, conn, gammaPos, gammaNeg, plotExample,
-        snr = 0.0, syllNames = []):
+        snr = 0.0, syllNames = None):
     """
     Function that runs syllable classification in a supervised manner using positive, negative and combined
     conceptors.
@@ -78,7 +78,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     
                 indices = np.arange(0, trainN + n_test[j], 1)
                 ind_tmp = indices.copy().tolist()
-                r.shuffle(ind_tmp)
+                random.shuffle(ind_tmp)
                 ind_tmp = np.array(ind_tmp)
                 
                 Samples.append(ind_tmp)
@@ -240,18 +240,18 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=14,
+    default=30,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '--trainN',
-    default=20,
+    default=40,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=1,
+    default=3,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -310,7 +310,6 @@ parser.add_argument(
 )
 parser.add_argument(
     '--resN',
-    # default=20,
     default=10,
     type=int,
     help='Size of the reservoir to be used for conceptor learning (default = 10)'
@@ -318,7 +317,6 @@ parser.add_argument(
 parser.add_argument(
     '--specRad',
     default=1.1,
-    # default=1.2,
     type=float,
     help='Spectral radius of the connectivity matrix of the reservoir (default = 1.2)'
 )
@@ -365,7 +363,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '-syllNames',
-    default=['aa','ao','ba','bm','ca','ck','da','dl','ea','ej','fa','ff','ha','hk'],
+    default=None,
     type=list,
     help='List of names of syllables to be used'
 )
