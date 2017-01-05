@@ -226,6 +226,7 @@ def log_results(path, args, perf, trialNo, error = ''):
         log.write('------------------------------------------------------ \n')
 
 
+
 # call only when this is the main script
 if __name__ == '__main__':
 
@@ -242,7 +243,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--syllN',
         type=int,
-        default=5,
+        default=40,
         help='number of syllables to include in train/test data'
     )
     parser.add_argument(
@@ -253,7 +254,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--cvalRuns',
-        default=1,
+        default=3,
         type=int,
         help='Number of cross validation runs with different training/test data splits (default = 1)'
     )
@@ -401,11 +402,12 @@ if __name__ == '__main__':
     perf_val = 0
     try:
         cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
-            sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
-            invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
-            smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
-            specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-            gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=args.snr, syllNames = args.syllNames)
+                                 sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
+                                 invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
+                                 smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
+                                 specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
+                                 gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
+                                 snr=args.snr, syllNames=args.syllNames)
         perf_val = np.mean(cval_perc, axis=0)[2]
     except all:
         log_results(args.logPath, args, perf_val, args.trial, e = sys.exc_info()[0])

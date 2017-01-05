@@ -85,20 +85,14 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                     syll_path = os.path.join(syllable_directory, syllables[ind[i]])
                     # try to find a syllable that fullfills the condition of the n_train length
                     if not samples:
-                        trainDataRaw.append(
-                            load_data(syll_path, n_train, 0, 0)
-                        )
-                        testDataRaw.append(
-                            load_data(syll_path, n_test[i], n_train, snr=snr)
-                        )
+                        trainDataRaw_tmp = load_data(syll_path, n_train, 0, 0)
+                        testDataRaw_tmp = load_data(syll_path, n_test[i], n_train, snr=snr)
                     else:
-                        trainDataRaw.append(
-                            load_data(syll_path, n_train, 0, 0, sample_order=samples[i][0:n_train])
-                        )
-                        testDataRaw.append(
-                            load_data(syll_path, n_test[i], n_train, snr=snr, sample_order=samples[i][n_train::])
-                        )
+                        trainDataRaw_tmp = load_data(syll_path, n_train, 0, 0, sample_order=samples[i][0:n_train])
+                        testDataRaw_tmp = load_data(syll_path, n_test[i], n_train, snr=snr, sample_order=samples[i][n_train::])
                     success = True
+                    trainDataRaw.append(trainDataRaw_tmp)
+                    testDataRaw.append(testDataRaw_tmp)
                 except Exception as err:
                     #redraw something new
                     new_syll = np.random.choice(syll_idxs, 1, replace=False)[0]
