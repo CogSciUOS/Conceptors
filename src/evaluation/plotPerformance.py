@@ -26,18 +26,18 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=5,
+    default=6,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '--trainN',
-    default=20,
+    default=40,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=5,
+    default=4,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -55,14 +55,13 @@ parser.add_argument(
 )
 parser.add_argument(
     '--mfccN',
-    # default=20,
-    default=25,
+    default=20,
     type=int,
     help='Number of mel frequency cepstral coefficients to extract for each mel frame (default = 25, which is the maximum possible)'
 )
 parser.add_argument(
     '--invCoeffOrder',
-    default=False,
+    default=True,
     help='Boolean, if true: Extract last n mfcc instead of first n (default = False)'
 )
 parser.add_argument(
@@ -97,7 +96,6 @@ parser.add_argument(
 )
 parser.add_argument(
     '--resN',
-    # default=20,
     default=10,
     type=int,
     help='Size of the reservoir to be used for conceptor learning (default = 10)'
@@ -105,7 +103,6 @@ parser.add_argument(
 parser.add_argument(
     '--specRad',
     default=1.1,
-    # default=1.2,
     type=float,
     help='Spectral radius of the connectivity matrix of the reservoir (default = 1.2)'
 )
@@ -117,7 +114,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--inpScale',
-    default=1.0,
+    default=0.2,
     type=float,
     help='Scaling of the input of the reservoir (default = 1.0)'
 )
@@ -152,7 +149,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '-syllNames',
-    default=['as','bl','ck','dm','el'],
+    default=None,
     type=list,
     help='List of names of syllables to be used'
 )
@@ -162,21 +159,18 @@ parser.add_argument(
     default=0.0,
     help='signal to noise ratio in the syllable data'
 )
-
 parser.add_argument(
     '--trial',
     type=int,
     default=0,
     help='the number of the trial that is used in documenting the results'
 )
-
 parser.add_argument(
     '--logPath',
     type=str,
     default='',
     help='the directory the logfile should be written to'
 )
-
 
 
 """ Run script via command window """
@@ -186,21 +180,23 @@ try:
 except:
     sys.exit(0)
 
-syll_numbers = np.arange(2,8)
+syll_numbers = np.array([2,4,6,8,10,12])
 snrs = np.array([4,2,1,0.5,0.25,0.125])
-meanPerformance = np.zeros((len(syll_numbers), len(snrs)))
 
+meanPerformance = np.zeros((len(syll_numbers), len(snrs)))
 k = 1
 
 for i,syll_num in enumerate(syll_numbers):
     for j,snr in enumerate(snrs):
         try:
             cval_perc = runSyllClass(path=args.path, syllN=syll_num, trainN=args.trainN, cvalRuns=args.cvalRuns,
-                sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
-                invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
-                smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
-                specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-                gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=snr)
+                                     sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
+                                     invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
+                                     smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
+                                     specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale,
+                                     conn=args.conn,
+                                     gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
+                                     snr=snr, syllNames=args.syllNames)
             perf_val = np.mean(cval_perc, axis=0)[2]
             meanPerformance[i,j] = perf_val
             print('Run',k,'of',len(syll_numbers)*len(snrs),'finished with mean performance: ', perf_val)
@@ -212,7 +208,7 @@ for i,syll_num in enumerate(syll_numbers):
     log_results(args.logPath, args, perf_val, args.trial)
 
 
-matshow(meanPerformance, cmap = 'jet', vmin = 0, vmax = 1, interpolation = 'nearest')
+matshow(meanPerformance, cmap = 'viridis', vmin = 0, vmax = 1, interpolation = 'nearest')
 colorbar()
 title('Mean syllable classification performance')
 xlabel('Signal-to-Noise Ratio')
