@@ -47,6 +47,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     # if syllable names are provided use those
     if syll_names is not None:
+        n_syllables = len(syll_names)
         for i, syll in enumerate(syll_names):
             syll_path = os.path.join(syllable_directory, syll)
 
@@ -111,8 +112,8 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
 
     """ MFCC extraction """
 
-    trainDataMel = getMEL(trainDataDS, mel_channels, inv_coefforder)
-    testDataMel = getMEL(testDataDS, mel_channels, inv_coefforder)
+    trainDataMel = getMEL(trainDataDS, mel_channels, inv_coefforder, winsize, frames)
+    testDataMel = getMEL(testDataDS, mel_channels, inv_coefforder, winsize, frames)
 
     """ shift and scale both datasets according to properties of training data """
 
@@ -239,7 +240,6 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
                 pad_size = int(math.ceil(float(sample[0].size)/SR)*SR - sample[0].size)
                 s_padded = np.append(sample[0], np.zeros(pad_size)*np.NaN)
                 s_new = sp.nanmean(s_padded.reshape(-1,SR), axis=1)
-            # elif dsType == 'FIR':
             elif dsType == 'IIR':
                 s_new = ss.decimate(sample[0],int(SR))
             samples.append([s_new, sampleRate])
