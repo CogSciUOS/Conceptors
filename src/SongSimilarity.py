@@ -24,6 +24,7 @@ RFCParams = {'N': 400,
 loadingParams = {'gradient_c': True}
 
 dataPrepParams = {
+        'snr':float('inf'),
         'sample_rate': 20000,
         'ds_type': 'mean',
         'mel_channels': 20,
@@ -79,10 +80,12 @@ nRuns = 50
 nComb = np.sum(np.arange(1,nSongs))
 
 #%% learn song conceptors and compare their similarity to the similarity of the actual songs
-xCorr = np.zeros(nRuns*nComb)
-xEucl = np.zeros_like(xCorr)
-yCorr = np.zeros_like(xCorr)
-yEucl = np.zeros_like(xCorr)
+xCorrF = np.zeros(nRuns*nComb)
+xCorrT = np.zeros_like(xCorrF)
+xEuclF = np.zeros_like(xCorrF)
+xEuclT = np.zeros_like(xCorrF)
+yCorr = np.zeros_like(xCorrF)
+yEucl = np.zeros_like(xCorrF)
 idx = np.arange(0,len(songs))
 
 for r in range(nRuns):
@@ -98,7 +101,7 @@ for r in range(nRuns):
             SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
         
         try:
-            SC.loadSongs(useSyllRecog = True, SyllPath ='D:/Data/Projects/StudyProject/syll',RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
+            SC.loadSongs(useSyllRecog = True, SyllPath ='../data/birddb/syll/',RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
             break
         except:
             print('loading songs failed, next try...')
@@ -117,10 +120,14 @@ for r in range(nRuns):
         songVecs.append(fullsong)
         
     #%% compare similarity between original songs with similarity between song conceptors
-    songCorr = np.zeros((nSongs,nSongs))
-    songEucl = np.zeros_like(songCorr)
-    conceptorCorr = np.zeros_like(songCorr)
-    conceptorEucl = np.zeros_like(songCorr)
+        
+    songCorr_f = np.zeros((nSongs,nSongs))
+    songEucl_f = np.zeros_like(songCorr_f)
+    songCorr_t = np.zeros_like(songCorr_f)
+    songEucl_t = np.zeros_like(songCorr_f)
+    conceptorCorr = np.zeros_like(songCorr_f)
+    conceptorEucl = np.zeros_like(songCorr_f)
+    
     for i in range(nSongs):
         for j in range(nSongs):
             
@@ -131,39 +138,64 @@ for r in range(nRuns):
                 song1 = np.concatenate((song1,np.zeros((song1.shape[0],-lenDiff))), axis = 1)
             elif lenDiff > 0:
                 song2 = np.concatenate((song2,np.zeros((song2.shape[0],lenDiff))), axis = 1)
-            songCorr[i,j] = np.mean(np.diag(cdist(song1.T,song2.T,metric='correlation')))
-            songEucl[i,j] = np.mean(np.diag(cdist(song1.T,song2.T,metric='euclidean')))
+            songCorr_f[i,j] = np.mean(np.diag(cdist(song1.T,song2.T,metric='correlation')))
+            songEucl_f[i,j] = np.mean(np.diag(cdist(song1.T,song2.T,metric='euclidean')))
+            songCorr_t[i,j] = np.mean(np.diag(cdist(song1,song2,metric='correlation')))
+            songEucl_t[i,j] = np.mean(np.diag(cdist(song1,song2,metric='euclidean')))
             
             conceptor1 = np.reshape(SC.R.C[i],(1,len(SC.R.C[i])))
             conceptor2 = np.reshape(SC.R.C[j],(1,len(SC.R.C[j])))
             conceptorCorr[i,j] = np.mean(np.diag(cdist(conceptor1,conceptor2,metric='correlation')))
             conceptorEucl[i,j] = np.mean(np.diag(cdist(conceptor1,conceptor2,metric='euclidean')))
             
-    xCorr_tmp = np.triu(songCorr,k=1)
-    xEucl_tmp = np.triu(songEucl,k=1)
+    xCorrF_tmp = np.triu(songCorr_f,k=1)
+    xEuclF_tmp = np.triu(songEucl_f,k=1)
+    xCorrT_tmp = np.triu(songCorr_t,k=1)
+    xEuclT_tmp = np.triu(songEucl_t,k=1)
     yCorr_tmp = np.triu(conceptorCorr,k=1)
     yEucl_tmp = np.triu(conceptorEucl,k=1)
     
-    xCorr[r*nComb:(r+1)*nComb] = xCorr_tmp[xCorr_tmp != 0]
+    xCorrF[r*nComb:(r+1)*nComb] = xCorrF_tmp[xCorrF_tmp != 0]
+    xCorrT[r*nComb:(r+1)*nComb] = xCorrT_tmp[xCorrT_tmp != 0]
     yCorr[r*nComb:(r+1)*nComb] = yCorr_tmp[yCorr_tmp != 0]
-    xEucl[r*nComb:(r+1)*nComb] = xEucl_tmp[xEucl_tmp != 0]
+    xEuclF[r*nComb:(r+1)*nComb] = xEuclF_tmp[xEuclF_tmp != 0]
+    xEuclT[r*nComb:(r+1)*nComb] = xEuclT_tmp[xEuclT_tmp != 0]
     yEucl[r*nComb:(r+1)*nComb] = yEucl_tmp[yEucl_tmp != 0]
     
     print('run ',r,' finished.')
     
-print('Correlation between correlational distance of songs and conceptors:', np.min(np.corrcoef(xCorr,y=yCorr)))
-print('Correlation between euclidean distance of songs and conceptors:', np.min(np.corrcoef(xEucl,y=yEucl)))
+print('Correlation between correlational distance of songs over features and conceptors:', np.min(np.corrcoef(xCorrF,y=yCorr)))
+print('Correlation between correlational distance of songs over time and conceptors:', np.min(np.corrcoef(xCorrT,y=yCorr)))
+print('Correlation between euclidean distance of songs over features and conceptors:', np.min(np.corrcoef(xEuclF,y=yEucl)))
+print('Correlation between euclidean distance of songs over time and conceptors:', np.min(np.corrcoef(xEuclT,y=yEucl)))
 
 #%% Plotting
 
+# scatter plot
 figure()
-scatter(xCorr,yCorr)
+scatter(xCorrT,yCorr)
 xlabel('Similarity of Songs')
 ylabel('Similarity of Conceptors')
 title('Correlation between SongSimilarity and ConceptorSimilarity')
 
+# sorted plot
+idx = np.argsort(yCorr)
+yCorr_sorted = np.sort(yCorr)
+xCorrT_sorted = xCorrT[idx]
+yCorr_sorted = yCorr_sorted - np.mean(yCorr_sorted)
+xCorrT_sorted = xCorrT_sorted - np.mean(xCorrT_sorted)
+
+windowLength = 5
+xCorr_mean = np.zeros(len(xCorrT))
+for i in range(len(xCorrT)):
+    if i < windowLength:
+        xCorr_mean[i] = np.mean(xCorrT_sorted[0:i+1])
+    else:
+        xCorr_mean[i] = np.mean(xCorrT_sorted[i-windowLength:i])
+
 figure()
-scatter(xEucl,yEucl)
-xlabel('Similarity of Songs')
-ylabel('Similarity of Conceptors')
-title('Correlation between Euclidean Distance of Songs and Conceptors')
+plot(np.arange(0,len(xCorrT)),yCorr_sorted,'r')
+plot(np.arange(0,len(xCorrT)),xCorrT_sorted,'b*')
+plot(np.arange(0,len(xCorrT)),xCorr_mean,'g')
+
+
