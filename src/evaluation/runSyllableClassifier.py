@@ -240,18 +240,18 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=30,
+    default=10,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '--trainN',
-    default=40,
+    default=30,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=3,
+    default=1,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
