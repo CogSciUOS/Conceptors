@@ -12,8 +12,8 @@ np.random.seed(SEED)
 random.seed(SEED)
 
 #put in the calculation for the different noise levels and syllables
-""" argument parser """
 
+""" argument parser """
 parser = argparse.ArgumentParser(
     description='Passes arguments on to syllable Classifier function'
 )
@@ -26,18 +26,18 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=6,
+    default=10,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
     '--trainN',
-    default=40,
+    default=30,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=4,
+    default=1,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -159,12 +159,14 @@ parser.add_argument(
     default=0.0,
     help='signal to noise ratio in the syllable data'
 )
+
 parser.add_argument(
     '--trial',
     type=int,
     default=0,
     help='the number of the trial that is used in documenting the results'
 )
+
 parser.add_argument(
     '--logPath',
     type=str,
@@ -180,8 +182,8 @@ try:
 except:
     sys.exit(0)
 
-syll_numbers = np.array([2,4,6,8,10,12])
-snrs = np.array([4,2,1,0.5,0.25,0.125])
+syll_numbers = np.array([10,20,30,40,50,60,70])
+snrs = np.array([16,8,4,2,1,0.5,0.25])
 
 meanPerformance = np.zeros((len(syll_numbers), len(snrs)))
 k = 1
@@ -189,31 +191,30 @@ k = 1
 for i,syll_num in enumerate(syll_numbers):
     for j,snr in enumerate(snrs):
         try:
-            cval_perc = runSyllClass(path=args.path, syllN=syll_num, trainN=args.trainN, cvalRuns=args.cvalRuns,
+            args.snr = snr
+            args.syllN = syll_num
+            cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
                                      sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
                                      invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
                                      smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
                                      specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale,
-                                     conn=args.conn,
-                                     gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
-                                     snr=snr, syllNames=args.syllNames)
+                                     conn=args.conn,gammaPos=args.gammaPos, gammaNeg=args.gammaNeg,
+                                     plotExample=args.plotExample, snr=args.snr, syllNames=args.syllNames)
             perf_val = np.mean(cval_perc, axis=0)[2]
             meanPerformance[i,j] = perf_val
             print('Run',k,'of',len(syll_numbers)*len(snrs),'finished with mean performance: ', perf_val)
+            log_results(args.logPath, args, perf_val, k) #logging values for later use
             k += 1
-        except all:
-            log_results(args.logPath, args, perf_val, args.trial, e = sys.exc_info()[0])
-            raise
+        except Exception:
+            log_results(args.logPath, args, perf_val, k, error = sys.exc_info()[0])
 
-    log_results(args.logPath, args, perf_val, args.trial)
-
-
+# Plotting the results
 matshow(meanPerformance, cmap = 'viridis', vmin = 0, vmax = 1, interpolation = 'nearest')
 colorbar()
 title('Mean syllable classification performance')
 xlabel('Signal-to-Noise Ratio')
 xticks(np.arange(0,len(snrs)), snrs)
-ylabel('Number of Songs')
+ylabel('Number of Syllables')
 yticks(np.arange(0,len(syll_numbers)), syll_numbers)
 
 show()
