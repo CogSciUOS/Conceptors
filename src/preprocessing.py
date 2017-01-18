@@ -229,13 +229,13 @@ def downSample(data, sampleRate = 20000, dsType = 'mean'):
     for syllable in data:
         samples = []
         for sample in syllable:
-            SR = np.round(sample[1]/float(sampleRate))
+            SR = int(np.round(sample[1]/float(sampleRate)))
             if dsType == 'mean':
                 pad_size = int(math.ceil(float(sample[0].size)/SR)*SR - sample[0].size)
                 s_padded = np.append(sample[0], np.zeros(pad_size)*np.NaN)
                 s_new = sp.nanmean(s_padded.reshape(-1,SR), axis=1)
             elif dsType == 'IIR':
-                s_new = ss.decimate(sample[0],int(SR))
+                s_new = ss.decimate(sample[0],SR)
             samples.append([s_new, sampleRate])
         syllables.append(samples)
     return syllables

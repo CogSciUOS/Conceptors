@@ -37,7 +37,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--cvalRuns',
-    default=1,
+    default=5,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -78,7 +78,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--smoothL',
-    default=5,
+    default=4,
     type=int,
     help='Desired length of the smoothed mfcc data (default = 4)'
 )
@@ -102,19 +102,19 @@ parser.add_argument(
 )
 parser.add_argument(
     '--specRad',
-    default=1.1,
+    default=0.9,
     type=float,
     help='Spectral radius of the connectivity matrix of the reservoir (default = 1.2)'
 )
 parser.add_argument(
     '--biasScale',
-    default=0.5,
+    default=0.4,
     type=float,
     help='Scaling of the bias term to be introduced to each reservoir element (default = 0.2)'
 )
 parser.add_argument(
     '--inpScale',
-    default=0.2,
+    default=0.3,
     type=float,
     help='Scaling of the input of the reservoir (default = 1.0)'
 )
@@ -132,7 +132,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--gammaNeg',
-    default=20,
+    default=27,
     type=int,
     help='Aperture to be used for computation of the negative conceptors'
 )
@@ -182,7 +182,7 @@ try:
 except:
     sys.exit(0)
 
-syll_numbers = np.array([10,20,30,40,50,60,70])
+syll_numbers = np.array([10,20,30,40,50])
 snrs = np.array([16,8,4,2,1,0.5,0.25])
 
 meanPerformance = np.zeros((len(syll_numbers), len(snrs)))
@@ -193,6 +193,7 @@ for i,syll_num in enumerate(syll_numbers):
         try:
             args.snr = snr
             args.syllN = syll_num
+            args.trainN = syll_num
             cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
                                      sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
                                      invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
