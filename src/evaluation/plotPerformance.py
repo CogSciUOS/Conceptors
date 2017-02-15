@@ -11,8 +11,6 @@ SEED = 100
 np.random.seed(SEED)
 random.seed(SEED)
 
-#put in the calculation for the different noise levels and syllables
-
 """ argument parser """
 parser = argparse.ArgumentParser(
     description='Passes arguments on to syllable Classifier function'
@@ -31,13 +29,13 @@ parser.add_argument(
 )
 parser.add_argument(
     '--trainN',
-    default=30,
+    default=50,
     type=int,
     help='number of training samples to use for each syllable (default = 30)'
 )
 parser.add_argument(
     '--cvalRuns',
-    default=5,
+    default=2,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -182,8 +180,9 @@ try:
 except:
     sys.exit(0)
 
-syll_numbers = np.array([10,20,30,40,50])
-snrs = np.array([16,8,4,2,1,0.5,0.25])
+syll_numbers = np.array([5, 10, 20, 25, 30, 35, 40, 45, 50, 55])
+#syll_numbers = np.array([5, 10, 15])
+snrs = np.array([0.0])
 
 meanPerformance = np.zeros((len(syll_numbers), len(snrs)))
 k = 1
@@ -193,7 +192,7 @@ for i,syll_num in enumerate(syll_numbers):
         try:
             args.snr = snr
             args.syllN = syll_num
-            args.trainN = syll_num
+            perf_val = 0.0
             cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
                                      sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
                                      invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
@@ -203,11 +202,13 @@ for i,syll_num in enumerate(syll_numbers):
                                      plotExample=args.plotExample, snr=args.snr, syllNames=args.syllNames)
             perf_val = np.mean(cval_perc, axis=0)[2]
             meanPerformance[i,j] = perf_val
-            print('Run',k,'of',len(syll_numbers)*len(snrs),'finished with mean performance: ', perf_val)
+            print('Run',k,'of',len(syll_numbers)*len(snrs),' (SyllNum: ',syll_num,')finished with mean performance: ', perf_val)
             log_results(args.logPath, args, perf_val, k) #logging values for later use
             k += 1
         except Exception:
             log_results(args.logPath, args, perf_val, k, error = sys.exc_info()[0])
+            print('Run', k, 'of', len(syll_numbers) * len(snrs), 'failed to finish with: ', perf_val)
+            k += 1
 
 # Plotting the results
 matshow(meanPerformance, cmap = 'viridis', vmin = 0, vmax = 1, interpolation = 'nearest')

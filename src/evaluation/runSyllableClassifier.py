@@ -75,12 +75,12 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
         Samples = []
         if cvalRuns > 1:
             for j in range(syllN):
-    
+
                 indices = np.arange(0, trainN + n_test[j], 1)
                 ind_tmp = indices.copy().tolist()
                 random.shuffle(ind_tmp)
                 ind_tmp = np.array(ind_tmp)
-                
+
                 Samples.append(ind_tmp)
 
         """ Get and preprocess data """
@@ -98,6 +98,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     if plotExample is True:
         plot_results(data, cval_results, evidences, cvalRuns)
 
+    print('Mean Evidences: ', np.mean(evidences))
     return cval_results
 
 
