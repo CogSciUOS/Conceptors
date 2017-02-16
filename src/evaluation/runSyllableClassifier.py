@@ -65,27 +65,24 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
 
     performances = []
     evidences = []
+    n_test = np.ones(syllN, dtype = int)*10
+    indices = np.arange(0, trainN + n_test[0], 1)
 
     for i in range(cvalRuns):
 
         syllClass = sC.syllableClassifier(**clearnParams)
-
-        n_test = np.random.random_integers(10, 50, syllN)
         
         Samples = []
-        if cvalRuns > 1:
-            for j in range(syllN):
-    
-                indices = np.arange(0, trainN + n_test[j], 1)
-                ind_tmp = indices.copy().tolist()
-                random.shuffle(ind_tmp)
-                ind_tmp = np.array(ind_tmp)
-                
-                Samples.append(ind_tmp)
+        for j in range(syllN):
+            
+            ind_tmp = indices
+            random.shuffle(ind_tmp)                
+            Samples.append(ind_tmp)
 
         """ Get and preprocess data """
-        data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
-        # reinitialize syllable classifier
+        data = preprocessing.preprocess(path, syllN, trainN, n_test, samples = Samples, **prepParams)
+        
+        """ train classifier and evaluate performance on test data """
         syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
         results = syllClass.cTest(data['test_data'])
 
@@ -104,7 +101,7 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
 def plot_results(data, cval_results, evidences, cvalRuns):
 
     sylls = figure(figsize=(15, 18))
-    syllables = [2, 7]
+    syllables = [2, 4]
     for syllable_i, syllable in enumerate(syllables):
         subplot(3, len(syllables), syllable_i + 1)
         # utteranceDataRaw = syllClass.trainDataDS[syllable][0][0]
@@ -222,190 +219,194 @@ def log_results(path, args, perf, trialNo, error = ''):
         log.write(str(args) + '\n')
         log.write('Mean Perf: '+str(perf) + '\n')
         if(error):
-            log.write('ERROR: ' + str(error) + '\n')
+            log.write('ERROR: ' + str(error))
         log.write('------------------------------------------------------ \n')
 
 
+""" argument parser """
 
-# call only when this is the main script
-if __name__ == '__main__':
+parser = argparse.ArgumentParser(
+    description='Passes arguments on to syllable Classifier function'
+)
+parser.add_argument(
+    '--path',
+    default='../../data/birddb/syll',
+    type=str,
+    help='directory to the folder that includes syllable folders with wave data'
+)
+parser.add_argument(
+    '--syllN',
+    type=int,
+    default=15,
+    help='number of syllables to include in train/test data'
+)
+parser.add_argument(
+    '--trainN',
+    default=30,
+    type=int,
+    help='number of training samples to use for each syllable (default = 30)'
+)
+parser.add_argument(
+    '--cvalRuns',
+    default=1,
+    type=int,
+    help='Number of cross validation runs with different training/test data splits (default = 1)'
+)
+parser.add_argument(
+    '--sampRate',
+    default=20000,
+    type=int,
+    help='Sampling Rate that raw data will be downsampled to (default = 20000)'
+)
+parser.add_argument(
+    '--interpolType',
+    default='mean',
+    type=str,
+    help='type of interpolation to be used for downsampling.'
+)
+parser.add_argument(
+    '--mfccN',
+    default=20,
+    type=int,
+    help='Number of mel frequency cepstral coefficients to extract for each mel frame (default = 25, which is the maximum possible)'
+)
+parser.add_argument(
+    '--invCoeffOrder',
+    default=True,
+    help='Boolean, if true: Extract last n mfcc instead of first n (default = False)'
+)
+parser.add_argument(
+    '--winsize',
+    default=20,
+    type=int,
+    help='Size of the time-window to be used for mfcc extraction in ms (default = 20)'
+)
+parser.add_argument(
+    '--melFramesN',
+    default=64,
+    type=int,
+    help='Desired number of time bins for mfcc data (default = 64)'
+)
+parser.add_argument(
+    '--smoothL',
+    default=4,
+    type=int,
+    help='Desired length of the smoothed mfcc data (default = 4)'
+)
+parser.add_argument(
+    '--polyOrder',
+    default=3,
+    type=int,
+    help='Order of the polynomial used for mfcc data smoothing (default = 3)'
+)
+parser.add_argument(
+    '--incDer',
+    default=[True, True],
+    type=list,
+    help='List of 2 booleans indicating whether to include 1./2. derivative of mfcc data or not (default = [True,True])'
+)
+parser.add_argument(
+    '--resN',
+    default=10,
+    type=int,
+    help='Size of the reservoir to be used for conceptor learning (default = 10)'
+)
+parser.add_argument(
+    '--specRad',
+    default=1.0,
+    type=float,
+    help='Spectral radius of the connectivity matrix of the reservoir (default = 1.2)'
+)
+parser.add_argument(
+    '--biasScale',
+    default=0.5,
+    type=float,
+    help='Scaling of the bias term to be introduced to each reservoir element (default = 0.2)'
+)
+parser.add_argument(
+    '--inpScale',
+    default=0.2,
+    type=float,
+    help='Scaling of the input of the reservoir (default = 1.0)'
+)
+parser.add_argument(
+    '--conn',
+    default=1.0,
+    type=float,
+    help='Downscaling of the reservoir connections (default = 1.0)'
+)
+parser.add_argument(
+    '--gammaPos',
+    default=25,
+    type=int,
+    help='Aperture to be used for computation of the positive conceptors'
+)
+parser.add_argument(
+    '--gammaNeg',
+    default=27,
+    type=int,
+    help='Aperture to be used for computation of the negative conceptors'
+)
+parser.add_argument(
+    '--plotExample',
+    default=False,
+    help='If true, plot raw & preprocessed mfcc data as well as conceptor evidences (default = False)'
+)
+parser.add_argument(
+    '--targetDir',
+    default=None,
+    type=str,
+    help='Subdirectory in which results are to be stored'
+)
+parser.add_argument(
+    '-syllNames',
+    default=None,
+    type=list,
+    help='List of names of syllables to be used'
+)
+parser.add_argument(
+    '--snr',
+    type=float,
+    default=0.0,
+    help='signal to noise ratio in the syllable data'
+)
 
-    """ argument parser """
-    parser = argparse.ArgumentParser(
-        description='Passes arguments on to syllable Classifier function'
-    )
-    parser.add_argument(
-        '--path',
-        default='../../data/birddb/syll',
-        type=str,
-        help='directory to the folder that includes syllable folders with wave data'
-    )
-    parser.add_argument(
-        '--syllN',
-        type=int,
-        default=10,
-        help='number of syllables to include in train/test data'
-    )
-    parser.add_argument(
-        '--trainN',
-        default=30,
-        type=int,
-        help='number of training samples to use for each syllable (default = 30)'
-    )
-    parser.add_argument(
-        '--cvalRuns',
-        default=1,
-        type=int,
-        help='Number of cross validation runs with different training/test data splits (default = 1)'
-    )
-    parser.add_argument(
-        '--sampRate',
-        default=20000,
-        type=int,
-        help='Sampling Rate that raw data will be downsampled to (default = 20000)'
-    )
-    parser.add_argument(
-        '--interpolType',
-        default='mean',
-        type=str,
-        help='type of interpolation to be used for downsampling.'
-    )
-    parser.add_argument(
-        '--mfccN',
-        default=20,
-        type=int,
-        help='Number of mel frequency cepstral coefficients to extract for each mel frame (default = 25, which is the maximum possible)'
-    )
-    parser.add_argument(
-        '--invCoeffOrder',
-        default=True,
-        help='Boolean, if true: Extract last n mfcc instead of first n (default = False)'
-    )
-    parser.add_argument(
-        '--winsize',
-        default=20,
-        type=int,
-        help='Size of the time-window to be used for mfcc extraction in ms (default = 20)'
-    )
-    parser.add_argument(
-        '--melFramesN',
-        default=64,
-        type=int,
-        help='Desired number of time bins for mfcc data (default = 64)'
-    )
-    parser.add_argument(
-        '--smoothL',
-        default=5,
-        type=int,
-        help='Desired length of the smoothed mfcc data (default = 4)'
-    )
-    parser.add_argument(
-        '--polyOrder',
-        default=3,
-        type=int,
-        help='Order of the polynomial used for mfcc data smoothing (default = 3)'
-    )
-    parser.add_argument(
-        '--incDer',
-        default=[True, True],
-        type=list,
-        help='List of 2 booleans indicating whether to include 1./2. derivative of mfcc data or not (default = [True,True])'
-    )
-    parser.add_argument(
-        '--resN',
-        default=10,
-        type=int,
-        help='Size of the reservoir to be used for conceptor learning (default = 10)'
-    )
-    parser.add_argument(
-        '--specRad',
-        default=1.1,
-        type=float,
-        help='Spectral radius of the connectivity matrix of the reservoir (default = 1.2)'
-    )
-    parser.add_argument(
-        '--biasScale',
-        default=0.5,
-        type=float,
-        help='Scaling of the bias term to be introduced to each reservoir element (default = 0.2)'
-    )
-    parser.add_argument(
-        '--inpScale',
-        default=0.2,
-        type=float,
-        help='Scaling of the input of the reservoir (default = 1.0)'
-    )
-    parser.add_argument(
-        '--conn',
-        default=1.0,
-        type=float,
-        help='Downscaling of the reservoir connections (default = 1.0)'
-    )
-    parser.add_argument(
-        '--gammaPos',
-        default=25,
-        type=int,
-        help='Aperture to be used for computation of the positive conceptors'
-    )
-    parser.add_argument(
-        '--gammaNeg',
-        default=20,
-        type=int,
-        help='Aperture to be used for computation of the negative conceptors'
-    )
-    parser.add_argument(
-        '--plotExample',
-        default=False,
-        help='If true, plot raw & preprocessed mfcc data as well as conceptor evidences (default = False)'
-    )
-    parser.add_argument(
-        '--targetDir',
-        default=None,
-        type=str,
-        help='Subdirectory in which results are to be stored'
-    )
-    parser.add_argument(
-        '-syllNames',
-        default=None,
-        type=list,
-        help='List of names of syllables to be used'
-    )
-    parser.add_argument(
-        '--snr',
-        type=float,
-        default=4.0,
-        help='signal to noise ratio in the syllable data'
-    )
+parser.add_argument(
+    '--trial',
+    type=int,
+    default=0,
+    help='the number of the trial that is used in documenting the results'
+)
 
-    parser.add_argument(
-        '--trial',
-        type=int,
-        default=0,
-        help='the number of the trial that is used in documenting the results'
-    )
-
-    parser.add_argument(
-        '--logPath',
-        type=str,
-        default='',
-        help='the directory the logfile should be written to'
-    )
+parser.add_argument(
+    '--logPath',
+    type=str,
+    default='',
+    help='the directory the logfile should be written to'
+)
 
 
-    # can be also run using an IDE, but uses the default parameters then
-    try:
-        args = parser.parse_args()
-    except:
-        sys.exit(0)
 
-    print(args)
-    perf_val = 0
+""" Run script via command window """
+# can be also run using an IDE, but uses the default parameters then
+try:
+    args = parser.parse_args()
+except:
+    sys.exit(0)
 
-    cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
-                                 sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
-                                 invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
-                                 smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
-                                 specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-                                 gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
-                                 snr=args.snr, syllNames=args.syllNames)
-    perf_val = np.mean(cval_perc, axis=0)[2]
+print(args)
+
+#try:
+cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
+        sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
+        invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
+        smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
+        specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn, gammaPos=args.gammaPos, 
+        gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=args.snr, syllNames = args.syllNames)
+perf_val = cval_perc
+            
+#except all:
+#    log_results(args.logPath, args, perf_val, args.trial, e = sys.exc_info()[0])
+#    raise
+
+#log_results(args.logPath, args, perf_val, args.trial)

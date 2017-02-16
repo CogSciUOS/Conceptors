@@ -98,6 +98,7 @@ def preprocess(syllable_directory, n_syllables, n_train, n_test, sample_rate, ds
                     new_syll = np.random.choice(syll_idxs, 1, replace=False)[0]
                     syll_idxs.remove(new_syll)
                     ind[i] = new_syll
+                    
 
     """ Downsampling """
 
