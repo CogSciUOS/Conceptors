@@ -65,27 +65,25 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
 
     performances = []
     evidences = []
+    n_test = np.ones(syllN, dtype = int)*10
+    indices = np.arange(0, trainN + n_test[0], 1)
 
     for i in range(cvalRuns):
 
         syllClass = sC.syllableClassifier(**clearnParams)
-
-        n_test = np.random.random_integers(10, 50, syllN)
         
         Samples = []
-        if cvalRuns > 1:
-            for j in range(syllN):
 
-                indices = np.arange(0, trainN + n_test[j], 1)
-                ind_tmp = indices.copy().tolist()
-                random.shuffle(ind_tmp)
-                ind_tmp = np.array(ind_tmp)
-
-                Samples.append(ind_tmp)
+        for j in range(syllN):
+            
+            ind_tmp = indices
+            random.shuffle(ind_tmp)                
+            Samples.append(ind_tmp)
 
         """ Get and preprocess data """
-        data = preprocessing.preprocess(path, syllN, trainN, n_test, **prepParams)
-        # reinitialize syllable classifier
+        data = preprocessing.preprocess(path, syllN, trainN, n_test, samples = Samples, **prepParams)
+        
+        """ train classifier and evaluate performance on test data """
         syllClass.cLearning(trainN, data['train_data'], gammaPos, gammaNeg)
         results = syllClass.cTest(data['test_data'])
 
@@ -98,14 +96,13 @@ def runSyllClass(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, i
     if plotExample is True:
         plot_results(data, cval_results, evidences, cvalRuns)
 
-    print('Mean Evidences: ', np.mean(evidences))
-    return cval_results
+    return cval_results, evidences
 
 
 def plot_results(data, cval_results, evidences, cvalRuns):
 
     sylls = figure(figsize=(15, 18))
-    syllables = [2, 7]
+    syllables = [2, 4]
     for syllable_i, syllable in enumerate(syllables):
         subplot(3, len(syllables), syllable_i + 1)
         # utteranceDataRaw = syllClass.trainDataDS[syllable][0][0]
@@ -217,21 +214,21 @@ def plot_results(data, cval_results, evidences, cvalRuns):
     show()
 
 
-def log_results(path, args, perf, trialNo, error = ''):
+def log_results(path, args, perf, trialNo, cval_perf, error = ''):
     with open(path+"log.txt", "a") as log:
         log.write('Trial ' + str(trialNo) +':\n')
         log.write(str(args) + '\n')
         log.write('Mean Perf: '+str(perf) + '\n')
+        log.write('Performance per cvrun per pos/neg/com conceptor:\n ' + str(cval_perf) + '\n')
         if(error):
-            log.write('ERROR: ' + str(error) + '\n')
+            log.write('ERROR: ' + str(error))
         log.write('------------------------------------------------------ \n')
 
 
-
-# call only when this is the main script
 if __name__ == '__main__':
 
     """ argument parser """
+
     parser = argparse.ArgumentParser(
         description='Passes arguments on to syllable Classifier function'
     )
@@ -244,7 +241,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--syllN',
         type=int,
-        default=10,
+        default=15,
         help='number of syllables to include in train/test data'
     )
     parser.add_argument(
@@ -296,7 +293,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--smoothL',
-        default=5,
+        default=4,
         type=int,
         help='Desired length of the smoothed mfcc data (default = 4)'
     )
@@ -320,7 +317,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--specRad',
-        default=1.1,
+        default=1.0,
         type=float,
         help='Spectral radius of the connectivity matrix of the reservoir (default = 1.2)'
     )
@@ -350,7 +347,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--gammaNeg',
-        default=20,
+        default=27,
         type=int,
         help='Aperture to be used for computation of the negative conceptors'
     )
@@ -374,7 +371,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--snr',
         type=float,
-        default=4.0,
+        default=0.0,
         help='signal to noise ratio in the syllable data'
     )
 
@@ -393,6 +390,8 @@ if __name__ == '__main__':
     )
 
 
+
+    """ Run script via command window """
     # can be also run using an IDE, but uses the default parameters then
     try:
         args = parser.parse_args()
@@ -400,13 +399,11 @@ if __name__ == '__main__':
         sys.exit(0)
 
     print(args)
-    perf_val = 0
 
     cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
-                                 sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
-                                 invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
-                                 smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
-                                 specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn,
-                                 gammaPos=args.gammaPos, gammaNeg=args.gammaNeg, plotExample=args.plotExample,
-                                 snr=args.snr, syllNames=args.syllNames)
-    perf_val = np.mean(cval_perc, axis=0)[2]
+            sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
+            invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
+            smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
+            specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale, conn=args.conn, gammaPos=args.gammaPos,
+            gammaNeg=args.gammaNeg, plotExample=args.plotExample, snr=args.snr, syllNames = args.syllNames)
+    perf_val = cval_perc

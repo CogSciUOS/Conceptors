@@ -7,7 +7,7 @@ from matplotlib.pyplot import *
 from evaluation.runSyllableClassifier import runSyllClass, log_results
 
 # set random seeds for both numpy and random
-SEED = 100
+SEED = 142
 np.random.seed(SEED)
 random.seed(SEED)
 
@@ -35,7 +35,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--cvalRuns',
-    default=2,
+    default=10,
     type=int,
     help='Number of cross validation runs with different training/test data splits (default = 1)'
 )
@@ -100,19 +100,19 @@ parser.add_argument(
 )
 parser.add_argument(
     '--specRad',
-    default=0.9,
+    default=1.0,
     type=float,
     help='Spectral radius of the connectivity matrix of the reservoir (default = 1.2)'
 )
 parser.add_argument(
     '--biasScale',
-    default=0.4,
+    default=0.5,
     type=float,
     help='Scaling of the bias term to be introduced to each reservoir element (default = 0.2)'
 )
 parser.add_argument(
     '--inpScale',
-    default=0.3,
+    default=0.2,
     type=float,
     help='Scaling of the input of the reservoir (default = 1.0)'
 )
@@ -180,8 +180,7 @@ try:
 except:
     sys.exit(0)
 
-syll_numbers = np.array([5, 10, 20, 25, 30, 35, 40, 45, 50, 55])
-#syll_numbers = np.array([5, 10, 15])
+syll_numbers = np.array([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])
 snrs = np.array([0.0])
 
 meanPerformance = np.zeros((len(syll_numbers), len(snrs)))
@@ -193,7 +192,7 @@ for i,syll_num in enumerate(syll_numbers):
             args.snr = snr
             args.syllN = syll_num
             perf_val = 0.0
-            cval_perc = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
+            cval_perc, evidences = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
                                      sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
                                      invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
                                      smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
@@ -203,7 +202,7 @@ for i,syll_num in enumerate(syll_numbers):
             perf_val = np.mean(cval_perc, axis=0)[2]
             meanPerformance[i,j] = perf_val
             print('Run',k,'of',len(syll_numbers)*len(snrs),' (SyllNum: ',syll_num,')finished with mean performance: ', perf_val)
-            log_results(args.logPath, args, perf_val, k) #logging values for later use
+            log_results(args.logPath, args, perf_val, k, cval_perc) #logging values for later use
             k += 1
         except Exception:
             log_results(args.logPath, args, perf_val, k, error = sys.exc_info()[0])
