@@ -7,7 +7,7 @@ from matplotlib.pyplot import *
 from evaluation.runSyllableClassifier import runSyllClass, log_results
 
 # set random seeds for both numpy and random
-SEED = 142
+SEED = 6342
 np.random.seed(SEED)
 random.seed(SEED)
 
@@ -180,7 +180,8 @@ try:
 except:
     sys.exit(0)
 
-syll_numbers = np.array([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])
+#syll_numbers = np.array([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])
+syll_numbers = np.array([55])
 snrs = np.array([0.0])
 
 meanPerformance = np.zeros((len(syll_numbers), len(snrs)))
@@ -192,30 +193,33 @@ for i,syll_num in enumerate(syll_numbers):
             args.snr = snr
             args.syllN = syll_num
             perf_val = 0.0
-            cval_perc, evidences = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN, cvalRuns=args.cvalRuns,
-                                     sampRate=args.sampRate, interpolType=args.interpolType, mfccN=args.mfccN,
-                                     invCoeffOrder=args.invCoeffOrder, winsize=args.winsize, melFramesN=args.melFramesN,
-                                     smoothL=args.smoothL, polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
-                                     specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale,
-                                     conn=args.conn,gammaPos=args.gammaPos, gammaNeg=args.gammaNeg,
-                                     plotExample=args.plotExample, snr=args.snr, syllNames=args.syllNames)
+            cval_perc, evidences = runSyllClass(path=args.path, syllN=args.syllN, trainN=args.trainN,
+                                                cvalRuns=args.cvalRuns, sampRate=args.sampRate,
+                                                interpolType=args.interpolType, mfccN=args.mfccN,
+                                                invCoeffOrder=args.invCoeffOrder, winsize=args.winsize,
+                                                melFramesN=args.melFramesN, smoothL=args.smoothL,
+                                                polyOrder=args.polyOrder, incDer=args.incDer, resN=args.resN,
+                                                specRad=args.specRad, biasScale=args.biasScale, inpScale=args.inpScale,
+                                                conn=args.conn,gammaPos=args.gammaPos, gammaNeg=args.gammaNeg,
+                                                plotExample=args.plotExample, snr=args.snr, syllNames=args.syllNames)
             perf_val = np.mean(cval_perc, axis=0)[2]
             meanPerformance[i,j] = perf_val
-            print('Run',k,'of',len(syll_numbers)*len(snrs),' (SyllNum: ',syll_num,')finished with mean performance: ', perf_val)
-            log_results(args.logPath, args, perf_val, k, cval_perc) #logging values for later use
+            print('Run', k, 'of', len(syll_numbers)*len(snrs),
+                  ' (SyllNum: ', syll_num, ')finished with mean performance: ', perf_val)
+            log_results(args.logPath, args, perf_val, k, cval_perc)  # logging values for later use
             k += 1
         except Exception:
-            log_results(args.logPath, args, perf_val, k, error = sys.exc_info()[0])
+            log_results(args.logPath, args, perf_val, k, 0.0, error=sys.exc_info()[0])
             print('Run', k, 'of', len(syll_numbers) * len(snrs), 'failed to finish with: ', perf_val)
             k += 1
 
 # Plotting the results
-matshow(meanPerformance, cmap = 'viridis', vmin = 0, vmax = 1, interpolation = 'nearest')
+matshow(meanPerformance, cmap='viridis', vmin=0, vmax=1, interpolation='nearest')
 colorbar()
 title('Mean syllable classification performance')
 xlabel('Signal-to-Noise Ratio')
-xticks(np.arange(0,len(snrs)), snrs)
+xticks(np.arange(0, len(snrs)), snrs)
 ylabel('Number of Syllables')
-yticks(np.arange(0,len(syll_numbers)), syll_numbers)
+yticks(np.arange(0, len(syll_numbers)), syll_numbers)
 
 show()
