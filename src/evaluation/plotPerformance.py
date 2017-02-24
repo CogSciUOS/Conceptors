@@ -11,7 +11,9 @@ SEED = 6342
 np.random.seed(SEED)
 random.seed(SEED)
 
+#put in the calculation for the different noise levels and syllables
 """ argument parser """
+
 parser = argparse.ArgumentParser(
     description='Passes arguments on to syllable Classifier function'
 )
@@ -24,7 +26,7 @@ parser.add_argument(
 parser.add_argument(
     '--syllN',
     type=int,
-    default=10,
+    default=5,
     help='number of syllables to include in train/test data'
 )
 parser.add_argument(
@@ -53,13 +55,14 @@ parser.add_argument(
 )
 parser.add_argument(
     '--mfccN',
-    default=20,
+    # default=20,
+    default=25,
     type=int,
     help='Number of mel frequency cepstral coefficients to extract for each mel frame (default = 25, which is the maximum possible)'
 )
 parser.add_argument(
     '--invCoeffOrder',
-    default=True,
+    default=False,
     help='Boolean, if true: Extract last n mfcc instead of first n (default = False)'
 )
 parser.add_argument(
@@ -94,6 +97,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--resN',
+    # default=20,
     default=10,
     type=int,
     help='Size of the reservoir to be used for conceptor learning (default = 10)'
@@ -112,7 +116,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--inpScale',
-    default=0.2,
+    default=1.0,
     type=float,
     help='Scaling of the input of the reservoir (default = 1.0)'
 )
@@ -147,7 +151,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '-syllNames',
-    default=None,
+    default=['as','bl','ck','dm','el'],
     type=list,
     help='List of names of syllables to be used'
 )
@@ -173,6 +177,7 @@ parser.add_argument(
 )
 
 
+
 """ Run script via command window """
 # can be also run using an IDE, but uses the default parameters then
 try:
@@ -185,6 +190,7 @@ syll_numbers = np.array([55])
 snrs = np.array([0.0])
 
 meanPerformance = np.zeros((len(syll_numbers), len(snrs)))
+
 k = 1
 
 for i,syll_num in enumerate(syll_numbers):
@@ -221,5 +227,4 @@ xlabel('Signal-to-Noise Ratio')
 xticks(np.arange(0, len(snrs)), snrs)
 ylabel('Number of Syllables')
 yticks(np.arange(0, len(syll_numbers)), syll_numbers)
-
 show()

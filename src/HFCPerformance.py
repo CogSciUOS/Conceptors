@@ -10,27 +10,25 @@ from songClassifier import *
 from matplotlib.pyplot import *
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
+import random
 
 #%% Parameters
 
+# set random seeds for both numpy and random
+SEED = 100
+np.random.seed(SEED)
+random.seed(SEED)
+
 # network parameters
-RFCParams = {'N': 400,
-             'K': 2000,
-             'NetSR': 1.5,
-             'bias_scale': 1.2,
-             'inp_scale': 1.5}
+RFCParams = {'N': 600,
+             'K': 3000,
+             'NetSR': 1.1,
+             'bias_scale': 1.5,
+             'inp_scale': 1.7}
              
 loadingParams = {'gradient_c': True}
 
 dataPrepParams = {}
-
-cLearningParams = {'neurons': 10,
-                   'spectral_radius': 1.2,
-                   'bias_scale': 0.2,
-                   'inp_scale': 1.,
-                   'conn': 1.,
-                   'gammaPos': 25,
-                   'gammaNeg': 27}
                    
 HFCParams = {'sigma': 0.82,
              'drift': 0.,
@@ -42,17 +40,33 @@ HFCParams = {'sigma': 0.82,
 syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej','fa','ff','ha','hk']
 
 # list of songs to train RFC on
-songs = [['aa','bm','ck'],
-         ['ao','da','ao','ej'],
-         ['ba','ck','ck','dl','ao'],
-         ['da','ff','ff'],
+songs = [['aa','bm','aa','ck'],
+         ['da','ck','aa','ck'],
+         ['dl','ea','ej','ca'],
+         ['hk','bm','bm','ca'],
+         ['da','da','ao','ao'],
+         ['dl','ea','ej','ea'],
          ['ba','ba','fa','fa'],
-         ['dl','ha','dl','ha','bm'],
-         ['hk','aa','da','hk']]
+         ['ca','ff','hk','dl'],
+         ['aa','ao','ba','bm'],
+         ['ca','ck','da','dl'],
+         ['ea','ej','fa','ff','ej'],
+         ['bm','hk','hk','bm','ca'],
+         ['dl','ba','dl','ba','bm'],
+         ['ba','ck','ck','dl','ao'],
+         ['ea','ao','ea','ao','aa'],
+         ['aa','bm','ck'],
+         ['da','ff','ff'],
+         ['ff','ck','ck'],
+         ['hk','ao','hk'],
+         ['ej','dl','ba']]
          
 # size of test data set and length of pauses added 
 nTestSongs = 100
 maxPauseLength = 1
+
+# number of runs per snr-nSongs combination
+cvalN = 1
 
 # independent variables
 SongNumbers = np.arange(2,8)
@@ -61,39 +75,47 @@ SNR = np.array([4,2,1,0.5,0.25,0.125])
 #%% Run songClassifier with above specified parameters and measure classification performance
 
 meanPerformance = np.zeros((len(SongNumbers), len(SNR)))
-k = 1
-# loop over different number of songs
-for i,nSongs in enumerate(SongNumbers):
-    
-    meanSongLength = nTestSongs/nSongs
+allPerformances = np.zeros((len(SongNumbers), len(SNR),cvalN))
+l = 1
 
-    SC = SongClassifier(syllables, verbose = True)
+# loop over cval runs
+for k in range(cvalN):
     
-    idx = np.arange(0,nSongs)
-    np.random.shuffle(idx)
-
-    # create random songs of random length from syllable list
-    for n in range(nSongs):
-        SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
-
-    # load songs into RFC
-    SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)    
+    # loop over different number of songs
+    for i,nSongs in enumerate(SongNumbers):
+        
+        meanSongLength = nTestSongs/nSongs
     
-    # loop over different noise scalings
-    for j,snr in enumerate(SNR):
+        SC = SongClassifier(syllables, verbose = True)
         
-        # set noise lvl
-        HFCParams['SigToNoise'] = snr
+        idx = np.arange(0,len(songs))
+        np.random.shuffle(idx)
+    
+        # create random songs of random length from syllable list
+        for n in range(nSongs):
+            SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
+    
+        # load songs into RFC
+        SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)    
         
-        # run HFC with patterns        
-        SC.run(patterns = SC.patterns, nLayers = 1, pattRepRange = [meanSongLength, meanSongLength+1], maxPauseLength = maxPauseLength, HFCParams = HFCParams)
-        
-        # measure classification error
-        performance = SC.H.checkPerformance()
-        meanPerformance[i,j] = np.mean(performance[-1,:])
-        #SC.H.plot_input()
-        print(k,'. of ',len(SongNumbers)*len(SNR),' runs finished.')
-        k += 1
+        # loop over different noise scalings
+        for j,snr in enumerate(SNR):
+            
+            # set noise lvl
+            HFCParams['SigToNoise'] = snr
+            
+            # run HFC with patterns        
+            SC.run(patterns = SC.patterns, nLayers = 1, pattRepRange = [meanSongLength, meanSongLength+1], maxPauseLength = maxPauseLength, HFCParams = HFCParams)
+            
+            # measure classification error
+            performance = SC.H.checkPerformance()
+            allPerformances[i,j,k] = np.mean(performance[-1,:])
+                
+            meanPerformance[i,j] = np.mean(allPerformances[i,j,:])
+            
+            #SC.H.plot_input()
+            print(l,'. of ',len(SongNumbers)*len(SNR)*cvalN,' runs finished.')
+            l += 1
         
 #%% plot mean performance over independent variables
 

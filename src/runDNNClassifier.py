@@ -33,6 +33,11 @@ import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 warnings.filterwarnings("ignore", category=np.ComplexWarning)
 
+# set random seeds for both numpy and random
+SEED = 100
+np.random.seed(SEED)
+random.seed(SEED)
+
 
 """ Functions """
 
@@ -175,7 +180,7 @@ def runDNN(path, syllN, trainN, cvalRuns, sampRate, interpolType, mfccN, invCoef
 """ MLP parameters """
 
 path = '/home/rgast/Documents/GitRepo/BirdsongRecog/data/birddb/syll' # directory to the folder that includes syllable folders with wave data
-trainN = 30 # number of training samples to use for each syllable
+trainN = 50 # number of training samples to use for each syllable
 cvalRuns = 10 # Number of cross validation runs with different training/test data splits
 sampRate = 20000 # Sampling Rate that raw data will be downsampled to
 interpolType = 'mean' # type of interpolation to be used for downsampling
@@ -192,7 +197,7 @@ snr = 0.0 # signal to noise ratio in the syllable data (if 0, no noise is added 
 layerSize = mfccN * smoothL * (1 + np.sum(np.array(incDer)))
 learningRate = 0.001 # the learning rate of the gradient descent optimizer
 batchSize = 10 # batch size for each weight update
-nEpochs = 5 # how many times to go through all training data to train MLP
+nEpochs = 3 # how many times to go through all training data to train MLP
 optimizer = 'Adam' # optimizer to use for gradient descent
 activationFcts = ['tanh','none'] # Activation function for units in each layer
 dropouts = [0.,0.] # weight dropout probability for each layer
@@ -203,7 +208,7 @@ normalizations = [None,None] # indicates which normalization to add to layer act
 
 """ evaluate MLP performance for different numbers of syllables """
 
-n_syllables = np.arange(30,35,5)
+n_syllables = np.arange(50,60,5)
 
 performances = []
 evidences = []
@@ -226,7 +231,7 @@ for n in n_syllables:
 
 """ save results """
 
-#with open('MLP_Results.pickle', 'wb') as f:
-#    
-#    pickle.dump([performances, evidences], f)
+with open('MLP_Results.pickle', 'wb') as f:
+    
+    pickle.dump([performances, evidences], f)
     
