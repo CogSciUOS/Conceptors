@@ -66,7 +66,7 @@ nTestSongs = 100
 maxPauseLength = 1
 
 # number of runs per snr-nSongs combination
-cvalN = 1
+cvalN = 10
 
 # independent variables
 SongNumbers = np.arange(2,8)
@@ -77,6 +77,7 @@ SNR = np.array([4,2,1,0.5,0.25,0.125])
 meanPerformance = np.zeros((len(SongNumbers), len(SNR)))
 allPerformances = np.zeros((len(SongNumbers), len(SNR),cvalN))
 l = 1
+maxTries = 5
 
 # loop over cval runs
 for k in range(cvalN):
@@ -85,18 +86,27 @@ for k in range(cvalN):
     for i,nSongs in enumerate(SongNumbers):
         
         meanSongLength = nTestSongs/nSongs
-    
-        SC = SongClassifier(syllables, verbose = True)
-        
         idx = np.arange(0,len(songs))
-        np.random.shuffle(idx)
-    
-        # create random songs of random length from syllable list
-        for n in range(nSongs):
-            SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
-    
-        # load songs into RFC
-        SC.loadSongs(RFCParams = RFCParams, loadingParams = loadingParams)    
+        
+        while True:
+            
+            try:
+            
+                SC = SongClassifier(syllables, verbose = True)
+                np.random.shuffle(idx)
+            
+                # create random songs of random length from syllable list
+                for n in range(nSongs):
+                    SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
+            
+                # load songs into RFC
+                SC.loadSongs(maxTries = maxTries, RFCParams = RFCParams, loadingParams = loadingParams)   
+                
+                break
+            
+            except:
+                
+                print('Loading of ',nSongs,' failed. Next try for new songs.')
         
         # loop over different noise scalings
         for j,snr in enumerate(SNR):
