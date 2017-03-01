@@ -10,8 +10,14 @@ from songClassifier import *
 from matplotlib.pyplot import *
 import warnings
 warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
+import random
 
 #%% Parameters
+
+# set random seeds for both numpy and random
+SEED = 42
+np.random.seed(SEED)
+random.seed(SEED)
 
 # network parameters
 RFCParams = {'N': 400,
@@ -31,7 +37,8 @@ dataPrepParams = {
         'frames': 64,
         'smooth_length': 5,
         'poly_order': 3,
-        'inc_der': [True, True]
+        'inc_der': [True, True],
+        'snr': 0
         }
 
 cLearningParams = {'neurons': 10,
@@ -52,41 +59,60 @@ HFCParams = {'sigma': 0.82,
 syllables = ['aa','ao','ba','bm','ca','ck','da','dl','ea','ej','fa','ff','ha','hk']
 
 # list of songs to train RFC on
-songs = [['aa','bm','ck'],
-         ['ao','da','ao','ej'],
-         ['ba','ck','ck','dl','ao'],
-         ['da','ff','ff'],
+songs = [['aa','bm','aa','ck'],
+         ['da','ck','aa','ck'],
+         ['dl','ea','ej','ca'],
+         ['hk','bm','bm','ca'],
+         ['da','da','ao','ao'],
+         ['dl','ea','ej','ea'],
          ['ba','ba','fa','fa'],
-         ['dl','ha','dl','ha','bm'],
-         ['hk','aa','da','hk']]
+         ['ca','ff','hk','dl'],
+         ['aa','ao','ba','bm'],
+         ['ca','ck','da','dl'],
+         ['ea','ej','fa','ff','ej'],
+         ['bm','hk','hk','bm','ca'],
+         ['dl','ba','dl','ba','bm'],
+         ['ba','ck','ck','dl','ao'],
+         ['ea','ao','ea','ao','aa'],
+         ['aa','bm','ck'],
+         ['da','ff','ff'],
+         ['ff','ck','ck'],
+         ['hk','ao','hk'],
+         ['ej','dl','ba']]
          
-# size of test data set, length of pauses added, number of songs and number of test runs
+# size of test data set and length of pauses added 
 nTestSongs = 100
 maxPauseLength = 1
-nSongs = 3
-nRuns = 10
+
+# number of runs per snr-nSongs combination
+cvalN = 10
+
+# independent variables
+SongNumbers = np.arange(2,8)
 
 #%% run Model
 
-meanSongLength = nTestSongs/nSongs
-performance = np.zeros(nRuns)
-idx = np.arange(0,nSongs)
-for i in range(nRuns):
-    
-    SC = SongClassifier(syllables, verbose = True)
-    
-    np.random.shuffle(idx)
-    for n in range(nSongs):
-        SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
-    
-    SC.loadSongs(useSyllRecog = True, SyllPath ='D:/Data/Projects/StudyProject/syll',RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
-    SC.run(patterns = SC.patterns, nLayers = 1, pattRepRange = [meanSongLength, meanSongLength+1], maxPauseLength = maxPauseLength, HFCParams = HFCParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
-    
-    p = SC.H.checkPerformance()
-    performance[i] = np.mean(p[-1,:])
-    print(i+1,'. run of ',nRuns,' runs is finished.')
+meanSongLength = nTestSongs/len(songs)
+performance = np.zeros((len(SongNumbers),cvalN))
 
+idx = np.arange(0,len(songs))
+l = 0
 
+for i in range(cvalN):
     
-    
-    
+    for j,nSongs in enumerate(SongNumbers):
+        
+        SC = SongClassifier(syllables, verbose = True)
+        
+        np.random.shuffle(idx)
+        for n in range(nSongs):
+            SC.addSong(len(songs[idx[n]]), song = songs[idx[n]])
+        
+        SC.loadSongs(useSyllRecog = True, SyllPath ='../data/birddb/syll',RFCParams = RFCParams, loadingParams = loadingParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
+        SC.run(patterns = SC.patterns, nLayers = 1, pattRepRange = [meanSongLength, meanSongLength+1], maxPauseLength = maxPauseLength, HFCParams = HFCParams, cLearningParams = cLearningParams, dataPrepParams = dataPrepParams)
+        
+        p = SC.H.checkPerformance()
+        performance[j,i] = np.mean(p[-1,:])
+        print(l+1,'. run of ',cvalN*len(SongNumbers),' runs is finished.')
+
+    np.save('/home/rgast/Documents/GitRepo/BirdsongRecog/src/evaluation/fullModel_Results', performance)
