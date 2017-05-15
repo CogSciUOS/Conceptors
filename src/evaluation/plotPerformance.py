@@ -7,7 +7,7 @@ from matplotlib.pyplot import *
 from evaluation.runSyllableClassifier import runSyllClass, log_results
 
 # set random seeds for both numpy and random
-SEED = 6342
+SEED = 142
 np.random.seed(SEED)
 random.seed(SEED)
 
@@ -181,7 +181,7 @@ except:
     sys.exit(0)
 
 #syll_numbers = np.array([5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])
-syll_numbers = np.array([55])
+syll_numbers = np.array([30])
 snrs = np.array([0.0])
 
 meanPerformance = np.zeros((len(syll_numbers), len(snrs)))
@@ -206,10 +206,10 @@ for i,syll_num in enumerate(syll_numbers):
             meanPerformance[i,j] = perf_val
             print('Run', k, 'of', len(syll_numbers)*len(snrs),
                   ' (SyllNum: ', syll_num, ')finished with mean performance: ', perf_val)
-            log_results(args.logPath, args, perf_val, k, cval_perc)  # logging values for later use
+            log_results(args.logPath, args, perf_val, k, cval_perc, evidences)  # logging values for later use
             k += 1
         except Exception:
-            log_results(args.logPath, args, perf_val, k, 0.0, error=sys.exc_info()[0])
+            log_results(args.logPath, args, perf_val, k, 0.0, 0.0, error=sys.exc_info()[0])
             print('Run', k, 'of', len(syll_numbers) * len(snrs), 'failed to finish with: ', perf_val)
             k += 1
 

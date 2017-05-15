@@ -214,12 +214,14 @@ def plot_results(data, cval_results, evidences, cvalRuns):
     show()
 
 
-def log_results(path, args, perf, trialNo, cval_perf, error = ''):
+def log_results(path, args, perf, trialNo, cval_perf, evidences, error = ''):
     with open(path+"log.txt", "a") as log:
         log.write('Trial ' + str(trialNo) +':\n')
         log.write(str(args) + '\n')
         log.write('Mean Perf: '+str(perf) + '\n')
         log.write('Performance per cvrun per pos/neg/com conceptor:\n ' + str(cval_perf) + '\n')
+        np.save('evidences.np', evidences)
+        log.write('Evidences saved to file \n')
         if(error):
             log.write('ERROR: ' + str(error))
         log.write('------------------------------------------------------ \n')
